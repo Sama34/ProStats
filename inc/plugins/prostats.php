@@ -2,10 +2,10 @@
 /*
  ___________________________________________________
 |													|
-| Plugin ProStats 1.7.4								|
+| Plugin ProStats 1.7.5								|
 | (c) 2008-2010 by SaeedGh (SaeehGhMail@Gmail.com)	|
 | Website: http://www.mybbhelp.ir					|
-| Last edit: 2010-05-10								|
+| Last edit: 2010-05-22								|
 |___________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -56,7 +56,7 @@ function prostats_info()
 		'website'		=>	'http://www.mybbhelp.ir',
 		'author'		=>	'SaeedGh',
 		'authorsite'	=>	'http://www.mybbhelp.ir',
-		'version'		=>	'1.7.4',
+		'version'		=>	'1.7.5',
 		'guid'			=>	'124b68d05dcdaf6b7971050baddf340f',
 		'compatibility'	=>	'14*,16*'
 	);
@@ -759,6 +759,8 @@ function prostats_deactivate()
 	
 	$db->delete_query("settings","name IN ('ps_active','ps_ignoreforums','ps_index','ps_portal','ps_position','ps_format_name','ps_subject_length','ps_num_rows','ps_date_format','ps_date_format_ty','ps_trow_message','ps_trow_message_pos','ps_last_topics','ps_last_topics_cells','ps_last_topics_pos','ps_cell_1','ps_cell_2','ps_cell_3','ps_cell_4','ps_cell_5','ps_cell_6','ps_global_tag','ps_xml_feed','ps_show_copyright')");
 	$db->delete_query("settinggroups","name='ProStats'");
+	
+	rebuild_settings();
 }
 
 
