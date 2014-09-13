@@ -2,11 +2,11 @@
 /*
  _______________________________________________________
 |                                                       |
-| Name: ProStats 1.9.3                                  |
+| Name: ProStats 1.9.4                                  |
 | Type: MyBB Plugin                                     |
 | Author: SaeedGh (SaeehGhMail@Gmail.com)               |
 | Support: http://prostats.wordpress.com/support/       |
-| Last edit: September 15th, 2011                       |
+| Last edit: December 02th, 2011                        |
 |_______________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -57,7 +57,7 @@ function prostats_info()
 		'website'		=>	'http://prostats.wordpress.com',
 		'author'		=>	'SaeedGh',
 		'authorsite'	=>	'mailto:SaeedGhMail@Gmail.com',
-		'version'		=>	'1.9.3', //*** ALSO IN THE SETTING "ps_version" ***
+		'version'		=>	'1.9.4', //*** ALSO IN THE SETTING "ps_version" ***
 		'guid'			=>	'124b68d05dcdaf6b7971050baddf340f',
 		'compatibility'	=>	'16*'
 	);
@@ -455,18 +455,14 @@ function prostats_install()
 		'title'			=> "ProStats Version",
 		'description'	=> "DO NOT MODIFY THIS SETTING",
 		'optionscode'	=> "text",
-		'value'			=> '1.9.3',
+		'value'			=> '1.9.4',
 		'disporder'		=> 90,
 		'gid'			=> $gid
 	);
 	
-	$r['version'] = 'ps_version';
-	if (substr(md5(serialize(array_replace(prostats_info(),$r))),8,1) === '1')
+	foreach ($ps as $p)
 	{
-		foreach ($ps as $p)
-		{
-			$db->insert_query("settings", $p);
-		}
+		$db->insert_query("settings", $p);
 	}
 	
 	rebuild_settings();
@@ -979,7 +975,7 @@ function prostats_run_portal()
 }
 
 
-function prostats_run_pre_output($contents)
+function prostats_run_pre_output(&$contents)
 {
 	global $mybb, $parser, $session, $prostats_tbl, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
 
