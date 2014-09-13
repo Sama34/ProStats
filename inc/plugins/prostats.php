@@ -2,10 +2,10 @@
 /*
  ___________________________________________________
 |													|
-| Plugin ProStats 1.7.5								|
+| Plugin ProStats 1.7.6								|
 | (c) 2008-2010 by SaeedGh (SaeehGhMail@Gmail.com)	|
 | Website: http://www.mybbhelp.ir					|
-| Last edit: 2010-05-22								|
+| Last edit: 2010-10-02								|
 |___________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -50,13 +50,13 @@ function prostats_info()
 	}
 	
 	return array(
-		'name'			=>	'<img border="0" src="../images/MybbHelp_small.gif" align="absbottom" /> <img border="0" src="../images/ProStats.gif" align="absbottom" /> ProStats',
+		'name'			=>	'<img border="0" src="../images/ProStats.gif" align="absbottom" /> ProStats',
 		'title'			=>	'ProStats',
 		'description'	=>	'Professional stats for MyBB. ' . $settings_link,
-		'website'		=>	'http://www.mybbhelp.ir',
+		'website'		=>	'http://community.mybb.com/thread-48686.html?',
 		'author'		=>	'SaeedGh',
-		'authorsite'	=>	'http://www.mybbhelp.ir',
-		'version'		=>	'1.7.5',
+		'authorsite'	=>	'mailto:SaeedGhMail@Gmail.com',
+		'version'		=>	'1.7.6',
 		'guid'			=>	'124b68d05dcdaf6b7971050baddf340f',
 		'compatibility'	=>	'14*,16*'
 	);
@@ -67,13 +67,13 @@ function prostats_activate()
 {
 	global $db;
 	
-	require MYBB_ROOT.'inc/adminfunctions_templates.php';
+	require_once MYBB_ROOT.'inc/adminfunctions_templates.php';
 	find_replace_templatesets('index', '#{\$header}(\r?)\n#', "{\$header}\n{\$ps_header_index}\n");
 	find_replace_templatesets('index', '#{\$forums}(\r?)\n#', "{\$forums}\n{\$ps_footer_index}\n");
 	find_replace_templatesets('portal', '#{\$header}(\r?)\n#', "{\$header}\n{\$ps_header_portal}\n");
 	find_replace_templatesets('portal', '#{\$footer}(\r?)\n#', "{\$ps_footer_portal}\n{\$footer}\n");
 	
-	$extra_cells = "select\n0=--\n1=Top posters\n2=Top referrers\n3=Most replies\n4=Most viewed\n5=Most thanks\n6=New members\n7=Top downloads";
+	$extra_cells = "select\n0=--\n1=Most replies\n2=Most reputations\n3=Most thanks\n4=Most viewed\n5=New members\n6=Top downloads\n7=Top posters\n8=Top referrers";
 
 	$templatearray = array(
 		"tid" => "NULL",
@@ -133,8 +133,6 @@ function prostats_done(request)
 		{\$trow_message_down}
 		</tbody>
 		</table>
-		<!-- You can hide the copyright link by changing settings of the plugin. -->
-		{\$prostats_copyright}
 		<br />
 		</div>",
 		"sid" => "-1",
@@ -151,53 +149,30 @@ function prostats_done(request)
 	
 	$templatearray = array(
 		"tid" => "NULL",
-		"title" => "prostats_newmembers",
-		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
+		"title" => "prostats_newestposts",
+		"template" => "<td class=\"{\$trow}\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
-		<td colspan=\"2\">{\$lang->prostats_newest_members}</td>
+		<td colspan=\"{\$colspan}\">{\$lang->prostats_newest_posts}</td>
 		</tr>
 		<tr>
-<td colspan=\"2\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
-		{\$newmembers_row}
-</table></td></tr>
+		<td colspan=\"{\$colspan}\">
+<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
+		<tr class=\"{\$trow} smalltext\">
+		{\$newestposts_cols_name}
+		</tr>
+		{\$newestposts_row}
+</table></td>
+		</tr>
 		</table></td>",
 		"sid" => "-1",
 		);
 	$db->insert_query("templates", $templatearray);
-		
+	
 	$templatearray = array(
 		"tid" => "NULL",
-		"title" => "prostats_newmembers_row",
-		"template" => "<tr class=\"smalltext\">
-		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
-		<td align=\"{\$ps_align}\">{\$regdate}</td>
-		</tr>",
-		"sid" => "-1",
-		);
-	$db->insert_query("templates", $templatearray);
-		
-	$templatearray = array(
-		"tid" => "NULL",
-		"title" => "prostats_topposters",
-		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
-		<tr class=\"tcat smalltext\">
-		<td colspan=\"2\">{\$lang->prostats_top_posters}</td>
-		</tr>
-		<tr>
-<td colspan=\"2\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
-		{\$topposters_row}
-</table></td></tr>
-		</table></td>",
-		"sid" => "-1",
-		);
-	$db->insert_query("templates", $templatearray);
-		
-	$templatearray = array(
-		"tid" => "NULL",
-		"title" => "prostats_topposters_row",
-		"template" => "<tr class=\"smalltext\">
-		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
-		<td align=\"{\$ps_align}\"><a href=\"search.php?action=finduser&amp;uid={\$uid}\">{\$postnum}</a></td>
+		"title" => "prostats_newestposts_row",
+		"template" => "<tr class=\"{\$trow} smalltext\">
+		{\$newestposts_cols}
 		</tr>",
 		"sid" => "-1",
 		);
@@ -205,14 +180,23 @@ function prostats_done(request)
 	
 	$templatearray = array(
 		"tid" => "NULL",
-		"title" => "prostats_topreferrers",
+		"title" => "prostats_newestposts_specialchar",
+		"template" => "<a href=\"{\$threadlink}\" style=\"text-decoration: none;\"><font face=\"arial\" style=\"line-height:10px;\">▼</font></a>",
+		"sid" => "-1",
+		);
+	$db->insert_query("templates", $templatearray);
+	
+	//Most Replies
+	$templatearray = array(
+		"tid" => "NULL",
+		"title" => "prostats_mostreplies",
 		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
-		<td colspan=\"2\">{\$lang->prostats_top_topreferrers}</td>
+		<td colspan=\"2\">{\$lang->prostats_most_replies}</td>
 		</tr>
 		<tr>
 <td colspan=\"2\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
-		{\$topreferrers_row}
+		{\$mostreplies_row}
 </table></td></tr>
 		</table></td>",
 		"sid" => "-1",
@@ -221,15 +205,44 @@ function prostats_done(request)
 		
 	$templatearray = array(
 		"tid" => "NULL",
-		"title" => "prostats_topreferrers_row",
+		"title" => "prostats_mostreplies_row",
 		"template" => "<tr class=\"smalltext\">
-		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
-		<td align=\"{\$ps_align}\">{\$refnum}</td>
+		<td>{\$readstate_icon}<a href=\"{\$threadlink}\" title=\"{\$subject_long}\">{\$subject}</a></td>
+		<td align=\"{\$ps_align}\"><a href=\"javascript:MyBB.whoPosted({\$tid});\">{\$replies}</a></td>
 		</tr>",
 		"sid" => "-1",
 		);
 	$db->insert_query("templates", $templatearray);
 	
+	//Most Reputation
+	$templatearray = array(
+		"tid" => "NULL",
+		"title" => "prostats_mostreputation",
+		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
+		<tr class=\"tcat smalltext\">
+		<td colspan=\"2\">{\$lang->prostats_most_reputations}</td>
+		</tr>
+		<tr>
+<td colspan=\"2\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
+		{\$mostreputation_row}
+</table></td></tr>
+		</table></td>",
+		"sid" => "-1",
+		);
+	$db->insert_query("templates", $templatearray);
+		
+	$templatearray = array(
+		"tid" => "NULL",
+		"title" => "prostats_mostreputation_row",
+		"template" => "<tr class=\"smalltext\">
+		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
+		<td align=\"{\$ps_align}\"><a href=\"reputation.php?uid={\$uid}\">{\$repscount}</a></td>
+		</tr>",
+		"sid" => "-1",
+		);
+	$db->insert_query("templates", $templatearray);
+	
+	//Most Thanks
 	$templatearray = array(
 		"tid" => "NULL",
 		"title" => "prostats_mostthanks",
@@ -257,72 +270,7 @@ function prostats_done(request)
 		);
 	$db->insert_query("templates", $templatearray);
 	
-	$templatearray = array(
-		"tid" => "NULL",
-		"title" => "prostats_newthreads",
-		"template" => "<td class=\"{\$trow}\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
-		<tr class=\"tcat smalltext\">
-		<td colspan=\"{\$colspan}\">{\$lang->prostats_newest_threads}</td>
-		</tr>
-		<tr>
-		<td colspan=\"{\$colspan}\">
-<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
-		<tr class=\"{\$trow} smalltext\">
-		{\$newthreads_cols_name}
-		</tr>
-		{\$newthreads_row}
-</table></td>
-		</tr>
-		</table></td>",
-		"sid" => "-1",
-		);
-	$db->insert_query("templates", $templatearray);
-	
-	$templatearray = array(
-		"tid" => "NULL",
-		"title" => "prostats_newthreads_row",
-		"template" => "<tr class=\"{\$trow} smalltext\">
-		{\$newthreads_cols}
-		</tr>",
-		"sid" => "-1",
-		);
-	$db->insert_query("templates", $templatearray);
-	
-	$templatearray = array(
-		"tid" => "NULL",
-		"title" => "prostats_newthreads_specialchar",
-		"template" => "<a href=\"{\$threadlink}\" style=\"text-decoration: none;\"><font face=\"arial\" style=\"line-height:10px;\">▼</font></a>",
-		"sid" => "-1",
-		);
-	$db->insert_query("templates", $templatearray);
-	
-	$templatearray = array(
-		"tid" => "NULL",
-		"title" => "prostats_mostreplies",
-		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
-		<tr class=\"tcat smalltext\">
-		<td colspan=\"2\">{\$lang->prostats_most_replies}</td>
-		</tr>
-		<tr>
-<td colspan=\"2\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
-		{\$mostreplies_row}
-</table></td></tr>
-		</table></td>",
-		"sid" => "-1",
-		);
-	$db->insert_query("templates", $templatearray);
-		
-	$templatearray = array(
-		"tid" => "NULL",
-		"title" => "prostats_mostreplies_row",
-		"template" => "<tr class=\"smalltext\">
-		<td>{\$readstate_icon}<a href=\"{\$threadlink}\" title=\"{\$subject_long}\">{\$subject}</a></td>
-		<td align=\"{\$ps_align}\"><a href=\"javascript:MyBB.whoPosted({\$tid});\">{\$replies}</a></td>
-		</tr>",
-		"sid" => "-1",
-		);
-	$db->insert_query("templates", $templatearray);
-		
+	//Most Views
 	$templatearray = array(
 		"tid" => "NULL",
 		"title" => "prostats_mostviews",
@@ -349,17 +297,18 @@ function prostats_done(request)
 		"sid" => "-1",
 		);
 	$db->insert_query("templates", $templatearray);
-		
+	
+	//Newest Members
 	$templatearray = array(
 		"tid" => "NULL",
-		"title" => "prostats_newposts",
+		"title" => "prostats_newmembers",
 		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
-		<td colspan=\"2\">{\$lang->prostats_newest_posts}</td>
+		<td colspan=\"2\">{\$lang->prostats_newest_members}</td>
 		</tr>
 		<tr>
 <td colspan=\"2\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
-		{\$newposts_row}
+		{\$newmembers_row}
 </table></td></tr>
 		</table></td>",
 		"sid" => "-1",
@@ -368,15 +317,16 @@ function prostats_done(request)
 		
 	$templatearray = array(
 		"tid" => "NULL",
-		"title" => "prostats_newposts_row",
+		"title" => "prostats_newmembers_row",
 		"template" => "<tr class=\"smalltext\">
-		<td><a href=\"{\$postlink}\" title=\"{\$subject_long}\">{\$subject}</a></td>
-		<td align=\"right\"><a href=\"{\$profilelink}\">{\$username}</a></td>
+		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
+		<td align=\"{\$ps_align}\">{\$regdate}</td>
 		</tr>",
 		"sid" => "-1",
 		);
 	$db->insert_query("templates", $templatearray);
 	
+	//Top Downloads
 	$templatearray = array(
 		"tid" => "NULL",
 		"title" => "prostats_topdownloads",
@@ -403,6 +353,63 @@ function prostats_done(request)
 		"sid" => "-1",
 		);
 	$db->insert_query("templates", $templatearray);
+	
+	//Top Posters
+	$templatearray = array(
+		"tid" => "NULL",
+		"title" => "prostats_topposters",
+		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
+		<tr class=\"tcat smalltext\">
+		<td colspan=\"2\">{\$lang->prostats_top_posters}</td>
+		</tr>
+		<tr>
+<td colspan=\"2\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
+		{\$topposters_row}
+</table></td></tr>
+		</table></td>",
+		"sid" => "-1",
+		);
+	$db->insert_query("templates", $templatearray);
+		
+	$templatearray = array(
+		"tid" => "NULL",
+		"title" => "prostats_topposters_row",
+		"template" => "<tr class=\"smalltext\">
+		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
+		<td align=\"{\$ps_align}\"><a href=\"search.php?action=finduser&amp;uid={\$uid}\">{\$postnum}</a></td>
+		</tr>",
+		"sid" => "-1",
+		);
+	$db->insert_query("templates", $templatearray);
+	
+	//Top Referrers
+	$templatearray = array(
+		"tid" => "NULL",
+		"title" => "prostats_topreferrers",
+		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
+		<tr class=\"tcat smalltext\">
+		<td colspan=\"2\">{\$lang->prostats_top_topreferrers}</td>
+		</tr>
+		<tr>
+<td colspan=\"2\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
+		{\$topreferrers_row}
+</table></td></tr>
+		</table></td>",
+		"sid" => "-1",
+		);
+	$db->insert_query("templates", $templatearray);
+		
+	$templatearray = array(
+		"tid" => "NULL",
+		"title" => "prostats_topreferrers_row",
+		"template" => "<tr class=\"smalltext\">
+		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
+		<td align=\"{\$ps_align}\">{\$refnum}</td>
+		</tr>",
+		"sid" => "-1",
+		);
+	$db->insert_query("templates", $templatearray);
+	
 	
 	$templatearray = array(
 		"tid" => "NULL",
@@ -440,7 +447,7 @@ function prostats_done(request)
 	
 	$ps_group = array(
 		"name"			=> "ProStats",
-		"title"			=> "☼ MybbHelp » ProStats",
+		"title"			=> "ProStats",
 		"description"	=> "Professional stats for MyBB.",
 		"disporder"		=> "1",
 		"isdefault"		=> "1",
@@ -508,7 +515,7 @@ function prostats_done(request)
 		"sid"			=> "NULL",
 		"name"			=> "ps_format_name",
 		"title"			=> "Style usernames",
-		"description"	=> "Style the username in true color, font and ... .",
+		"description"	=> "Style the username in true color, font, etc.",
 		"optionscode"	=> "yesno",
 		"value"			=> '1',
 		"disporder"		=> '20',
@@ -541,7 +548,7 @@ function prostats_done(request)
 		"sid"			=> "NULL",
 		"name"			=> "ps_date_format",
 		"title"			=> "Date and Time format",
-		"description"	=> "The format of Date and Time in the ProStats table (<a href=\"http://php.net/manual/en/function.date.php\">More details</a>).",
+		"description"	=> "The format of Date and Time which would be used in stats. [<a href=\"http://php.net/manual/en/function.date.php\" target=\"_blank\">More Information</a>]",
 		"optionscode"	=> "text",
 		"value"			=> 'm-d, H:i',
 		"disporder"		=> '42',
@@ -552,7 +559,7 @@ function prostats_done(request)
 		"sid"			=> "NULL",
 		"name"			=> "ps_date_format_ty",
 		"title"			=> "Replace format",
-		"description"	=> "A part of Date and Time format that can be replaced with \"Yesterday\" or \"Today\".",
+		"description"	=> "A part of Date and Time format that must be replaced with \"Yesterday\" or \"Today\".",
 		"optionscode"	=> "text",
 		"value"			=> 'm-d',
 		"disporder"		=> '43',
@@ -583,9 +590,9 @@ function prostats_done(request)
 	
 	$ps[]= array(
 		"sid"			=> "NULL",
-		"name"			=> "ps_last_topics",
-		"title"			=> "Show last topics",
-		"description"	=> "Show last topics in the ProStats table.",
+		"name"			=> "ps_newest_posts",
+		"title"			=> "Show newest posts",
+		"description"	=> "Show newest posts in the ProStats table.",
 		"optionscode"	=> "yesno",
 		"value"			=> '1',
 		"disporder"		=> '50',
@@ -594,20 +601,20 @@ function prostats_done(request)
 	
 	$ps[]= array(
 		"sid"			=> "NULL",
-		"name"			=> "ps_last_topics_cells",
-		"title"			=> "Stats of last topics",
-		"description"	=> "What type of stats you want to be shown for last topics?<br />Your choices are: <strong>New_threads, Date, Starter, Last_sender, Forum</strong><br />Separate them by comma (\",\").",
+		"name"			=> "ps_newest_posts_cells",
+		"title"			=> "Stats of newest posts",
+		"description"	=> "What type of stats you want to be shown for newest posts?<br />Your choices are: <strong>Newest_posts, Date, Starter, Last_sender, Forum</strong><br />Separate them by comma (\",\").",
 		"optionscode"	=> "text",
-		"value"			=> 'New_threads, Date, Starter, Last_sender, Forum',
+		"value"			=> 'Newest_posts, Date, Starter, Last_sender, Forum',
 		"disporder"		=> '55',
 		"gid"			=> intval($gid),
 	);
 	
 	$ps[]= array(
 		"sid"			=> "NULL",
-		"name"			=> "ps_last_topics_pos",
-		"title"			=> "Last topics position",
-		"description"	=> "The position of the Last topics field.",
+		"name"			=> "ps_newest_posts_pos",
+		"title"			=> "Newest posts position",
+		"description"	=> "The position of the Newest posts block.",
 		"optionscode"	=> "select\n0=Left\n1=Right",
 		"value"			=> '0',
 		"disporder"		=> '60',
@@ -642,7 +649,7 @@ function prostats_done(request)
 		"title"			=> "Extra cell 3 (Top-Middle)",
 		"description"	=> "<div style=\"width:98px;height:43px;overflow:hidden;text-direction:rtl;margin-top:5px;\"><img style=\"float:left;\" src=\"../images/ps_cells.gif\" /><img style=\"float:left;margin-top:-178px;margin-left:-14px;\" src=\"../images/ps_cells.gif\" /></div>",
 		"optionscode"	=> $extra_cells,
-		"value"			=> '3',
+		"value"			=> '1',
 		"disporder"		=> '66',
 		"gid"			=> intval($gid),
 	);
@@ -653,7 +660,7 @@ function prostats_done(request)
 		"title"			=> "Extra cell 4 (Bottom-Middle)",
 		"description"	=> "<div style=\"width:98px;height:43px;overflow:hidden;text-direction:rtl;margin-top:5px;\"><img style=\"float:left;\" src=\"../images/ps_cells.gif\" /><img style=\"float:left;margin-top:-159px;margin-left:-14px;\" src=\"../images/ps_cells.gif\" /></div>",
 		"optionscode"	=> $extra_cells,
-		"value"			=> '1',
+		"value"			=> '7',
 		"disporder"		=> '68',
 		"gid"			=> intval($gid),
 	);
@@ -664,7 +671,7 @@ function prostats_done(request)
 		"title"			=> "Extra cell 5 (Top-Right)",
 		"description"	=> "<div style=\"width:98px;height:43px;overflow:hidden;text-direction:rtl;margin-top:5px;\"><img style=\"float:left;\" src=\"../images/ps_cells.gif\" /><img style=\"float:left;margin-top:-178px;margin-left:0px;\" src=\"../images/ps_cells.gif\" /></div>",
 		"optionscode"	=> $extra_cells,
-		"value"			=> '5',
+		"value"			=> '3',
 		"disporder"		=> '70',
 		"gid"			=> intval($gid),
 	);
@@ -675,11 +682,22 @@ function prostats_done(request)
 		"title"			=> "Extra cell 6 (Bottom-Right)",
 		"description"	=> "<div style=\"width:98px;height:43px;overflow:hidden;text-direction:rtl;margin-top:5px;\"><img style=\"float:left;\" src=\"../images/ps_cells.gif\" /><img style=\"float:left;margin-top:-159px;margin-left:0px;\" src=\"../images/ps_cells.gif\" /></div>",
 		"optionscode"	=> $extra_cells,
-		"value"			=> '6',
+		"value"			=> '5',
 		"disporder"		=> '72',
 		"gid"			=> intval($gid),
 	);
 
+	$ps[]= array(
+		"sid"			=> "NULL",
+		"name"			=> "ps_hidefrombots",
+		"title"			=> "Hide from search bots",
+		"description"	=> "Using this option you can hide stats from all search bots you\'ve defined them in <strong><a href=\"index.php?module=config-spiders\" target=\"_blank\">Spiders/Bots</a></strong> page. This will save bandwidth and decrease server load.",
+		"optionscode"	=> "yesno",
+		"value"			=> '1',
+		"disporder"		=> '74',
+		"gid"			=> intval($gid),
+	);
+	
 	$ps[]= array(
 		"sid"			=> "NULL",
 		"name"			=> "ps_global_tag",
@@ -687,7 +705,7 @@ function prostats_done(request)
 		"description"	=> "So you can edit themes and insert &lt;ProStats&gt; tag wherever you want to show the stats",
 		"optionscode"	=> "yesno",
 		"value"			=> '0',
-		"disporder"		=> '75',
+		"disporder"		=> '76',
 		"gid"			=> intval($gid),
 	);
 	
@@ -695,21 +713,10 @@ function prostats_done(request)
 		"sid"			=> "NULL",
 		"name"			=> "ps_xml_feed",
 		"title"			=> "Active XML feed",
-		"description"	=> "Output the stats in XML format ( index.php?stats=xml )",
+		"description"	=> "Output the stats in XML format to show on other websites [<a href=\"http://community.mybb.com/thread-48686.html\" target=\"_blank\">More Information</a>]",
 		"optionscode"	=> "yesno",
 		"value"			=> '0',
-		"disporder"		=> '77',
-		"gid"			=> intval($gid),
-	);
-	
-	$ps[]= array(
-		"sid"			=> "NULL",
-		"name"			=> "ps_show_copyright",
-		"title"			=> "Show Copyright link",
-		"description"	=> "Select Yes to show copyright link or No to hide it. Also you can delete {\$prostats_copyright} to totally disable this feature.",
-		"optionscode"	=> "yesno",
-		"value"			=> '0',
-		"disporder"		=> '80',
+		"disporder"		=> '78',
 		"gid"			=> intval($gid),
 	);
 		
@@ -726,38 +733,16 @@ function prostats_deactivate()
 {
 	global $db;
 	
-	require MYBB_ROOT."/inc/adminfunctions_templates.php";
+	require_once MYBB_ROOT."/inc/adminfunctions_templates.php";
 	find_replace_templatesets("index", '#{\$ps_header_index}(\r?)\n#', "", 0);
 	find_replace_templatesets("index", '#{\$ps_footer_index}(\r?)\n#', "", 0);
 	find_replace_templatesets("portal", '#{\$ps_header_portal}(\r?)\n#', "", 0);
 	find_replace_templatesets("portal", '#{\$ps_footer_portal}(\r?)\n#', "", 0);
 	
 	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_readstate_icon'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_newmembers'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_newmembers_row'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_topposters'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_topposters_row'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_topreferrers'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_topreferrers_row'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_mostthanks'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_mostthanks_row'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_newthreads'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_newthreads_row'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_newthreads_specialchar'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_mostreplies'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_mostreplies_row'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_mostviews'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_mostviews_row'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_newposts'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_newposts_row'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_topdownloads'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_topdownloads_row'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_message'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_onerowextra'");
-	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_tworowextra'");
+	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title LIKE 'prostats_%'");
 	
-	$db->delete_query("settings","name IN ('ps_active','ps_ignoreforums','ps_index','ps_portal','ps_position','ps_format_name','ps_subject_length','ps_num_rows','ps_date_format','ps_date_format_ty','ps_trow_message','ps_trow_message_pos','ps_last_topics','ps_last_topics_cells','ps_last_topics_pos','ps_cell_1','ps_cell_2','ps_cell_3','ps_cell_4','ps_cell_5','ps_cell_6','ps_global_tag','ps_xml_feed','ps_show_copyright')");
+	$db->delete_query("settings","name IN ('ps_active','ps_ignoreforums','ps_index','ps_portal','ps_position','ps_format_name','ps_subject_length','ps_num_rows','ps_date_format','ps_date_format_ty','ps_trow_message','ps_trow_message_pos','ps_newest_posts','ps_newest_posts_cells','ps_newest_posts_pos','ps_cell_1','ps_cell_2','ps_cell_3','ps_cell_4','ps_cell_5','ps_cell_6','ps_hidefrombots','ps_global_tag','ps_xml_feed')");
 	$db->delete_query("settinggroups","name='ProStats'");
 	
 	rebuild_settings();
@@ -766,17 +751,20 @@ function prostats_deactivate()
 
 function prostats_run_global()
 {
-	global $mybb;
+	global $mybb, $session;
 	
 	if (isset($GLOBALS['templatelist']))
 	{
 		if ($mybb->settings['ps_active'] && defined('THIS_SCRIPT'))
 		{
-			if (($mybb->settings['ps_index'] && THIS_SCRIPT == 'index.php')
-				|| ($mybb->settings['ps_portal'] && THIS_SCRIPT == 'portal.php')
-				|| $mybb->settings['ps_global_tag'])
+			if (!$mybb->settings['ps_hidefrombots'] || empty($session->is_spider))
 			{
-				$GLOBALS['templatelist'] .= ",prostats,prostats_readstate_icon,prostats_newmembers,prostats_newmembers_row,prostats_topposters,prostats_topposters_row,prostats_topreferrers,prostats_topreferrers_row,prostats_mostthanks,prostats_mostthanks_row,prostats_newthreads,prostats_newthreads_row,prostats_newthreads_specialchar,prostats_mostreplies,prostats_mostreplies_row,prostats_mostviews,prostats_mostviews_row,prostats_newposts,prostats_newposts_row,prostats_topdownloads,prostats_topdownloads_row,prostats_message,prostats_onerowextra,prostats_tworowextra";
+				if (($mybb->settings['ps_index'] && THIS_SCRIPT == 'index.php')
+					|| ($mybb->settings['ps_portal'] && THIS_SCRIPT == 'portal.php')
+					|| $mybb->settings['ps_global_tag'])
+				{
+					$GLOBALS['templatelist'] .= ",prostats,prostats_readstate_icon,prostats_newmembers,prostats_newmembers_row,prostats_topposters,prostats_topposters_row,prostats_topreferrers,prostats_topreferrers_row,prostats_mostthanks,prostats_mostthanks_row,prostats_newestposts,prostats_newestposts_row,prostats_newestposts_specialchar,prostats_mostreplies,prostats_mostreplies_row,prostats_mostviews,prostats_mostviews_row,prostats_topdownloads,prostats_topdownloads_row,prostats_mostreputation,prostats_mostreputation_row,prostats_message,prostats_onerowextra,prostats_tworowextra";
+				}
 			}
 		}
 	}
@@ -785,10 +773,12 @@ function prostats_run_global()
 
 function prostats_run_index($force = false)
 {
-	global $mybb, $parser, $prostats_tbl, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
+	global $mybb, $parser, $session, $prostats_tbl, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
 
 	if (!$mybb->settings['ps_active']) {return false;}
 
+	if ($mybb->settings['ps_hidefrombots'] && !empty($session->is_spider)) {return false;}
+	
 	if (!is_object($parser))
 	{
 		require_once MYBB_ROOT.'inc/class_parser.php';
@@ -824,10 +814,12 @@ function prostats_run_index($force = false)
 
 function prostats_run_portal()
 {
-	global $mybb, $parser, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
+	global $mybb, $parser, $session, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
 	
 	if (!$mybb->settings['ps_active']) {return false;}
 
+	if ($mybb->settings['ps_hidefrombots'] && !empty($session->is_spider)) {return false;}
+	
 	if (!is_object($parser))
 	{
 		require_once MYBB_ROOT.'inc/class_parser.php';
@@ -857,9 +849,11 @@ function prostats_run_portal()
 
 function prostats_run_pre_output($contents)
 {
-	global $mybb, $parser, $prostats_tbl, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
+	global $mybb, $parser, $session, $prostats_tbl, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
 
 	if (!$mybb->settings['ps_active']) {return false;}
+	
+	if ($mybb->settings['ps_hidefrombots'] && !empty($session->is_spider)) {return false;}
 	
 	if (!is_object($parser))
 	{
@@ -884,9 +878,9 @@ function prostats_run_pre_output($contents)
 }
 
 
-function ps_GetLastTopics($NumOfRows, $feed=false)
+function ps_GetNewestPosts($NumOfRows, $feed=false)
 {
-	global $mybb, $db, $templates, $theme, $lang, $unviewwhere, $parser, $lightbulb, $trow, $newthreads_cols_name, $newthreads_cols, $colspan, $feeditem;
+	global $mybb, $db, $templates, $theme, $lang, $unviewwhere, $parser, $lightbulb, $trow, $newestposts_cols_name, $newestposts_cols, $colspan, $feeditem;
 
 	if (!is_object($parser))
 	{
@@ -905,42 +899,42 @@ function ps_GetLastTopics($NumOfRows, $feed=false)
 		ORDER BY t.lastpost DESC 
 		LIMIT 0,".$NumOfRows);
 		
-		$newthreads_cols_name = "";
-		$newthreads_cols = "";
+		$newestposts_cols_name = "";
+		$newestposts_cols = "";
 		$colspan = 0;
 		$active_cells = "";
 		
-		$last_topics_cells_arr = escaped_explode(",", htmlspecialchars_uni($mybb->settings['ps_last_topics_cells']),20);
+		$newest_posts_cells_arr = escaped_explode(",", htmlspecialchars_uni($mybb->settings['ps_newest_posts_cells']),20);
 		
-		foreach($last_topics_cells_arr as $last_topics_cell)
+		foreach($newest_posts_cells_arr as $newest_posts_cell)
 		{
 			++$colspan;
 			
-			switch($last_topics_cell)
+			switch($newest_posts_cell)
 			{
-				case "New_threads" : 
-					$active_cells['New_threads']=1;
-					$newthreads_cols_name .= "<td>".$lang->prostats_topic."</td>";
-					$cell_order[$colspan]='New_threads';
+				case "Newest_posts" : 
+					$active_cells['Newest_posts']=1;
+					$newestposts_cols_name .= "<td>".$lang->prostats_topic."</td>";
+					$cell_order[$colspan]='Newest_posts';
 					break;
 				case "Date" :
 					$active_cells['Date']=1;
-					$newthreads_cols_name .= "<td>".$lang->prostats_datetime."&nbsp;</td>";
+					$newestposts_cols_name .= "<td>".$lang->prostats_datetime."&nbsp;</td>";
 					$cell_order[$colspan]='Date';
 					break;
 				case "Starter" :
 					$active_cells['Starter']=1;
-					$newthreads_cols_name .= "<td>".$lang->prostats_author."</td>";
+					$newestposts_cols_name .= "<td>".$lang->prostats_author."</td>";
 					$cell_order[$colspan]='Starter';
 					break;
 				case "Last_sender" :
 					$active_cells['Last_sender']=1;
-					$newthreads_cols_name .= "<td>".$lang->prostats_last_sender."</td>";
+					$newestposts_cols_name .= "<td>".$lang->prostats_last_sender."</td>";
 					$cell_order[$colspan]='Last_sender';
 					break;
 				case "Forum" :
 					$active_cells['Forum']=1;
-					$newthreads_cols_name .= "<td>".$lang->prostats_forum."</td>";
+					$newestposts_cols_name .= "<td>".$lang->prostats_forum."</td>";
 					$cell_order[$colspan]='Forum';
 					break;
 				default: --$colspan;
@@ -957,7 +951,7 @@ function ps_GetLastTopics($NumOfRows, $feed=false)
 		$fuid = $newest_threads['uid'];
 		$fid = $newest_threads['fid'];
 		$lightbulb['folder'] = "off";
-		$newthreads_cols = "";
+		$newestposts_cols = "";
 		
 		if ($mybb->user['uid'])
 		{
@@ -994,14 +988,14 @@ function ps_GetLastTopics($NumOfRows, $feed=false)
 			}
 		}
 		
-		if ($active_cells['New_threads'])
+		if ($active_cells['Newest_posts'])
 		{
 			$parsed_subject = $parser->parse_badwords($newest_threads['subject']);
 			$subject = htmlspecialchars_uni(ps_SubjectLength($parsed_subject));
 			$subject_long = htmlspecialchars_uni($parsed_subject);
 			$threadlink = get_thread_link($tid,NULL,"lastpost");
 			eval("\$readstate_icon = \"".$templates->get("prostats_readstate_icon")."\";");
-			eval("\$newthreads_specialchar = \"".$templates->get("prostats_newthreads_specialchar")."\";");
+			eval("\$newestposts_specialchar = \"".$templates->get("prostats_newestposts_specialchar")."\";");
 		}
 		
 		if ($active_cells['Starter'])
@@ -1027,26 +1021,26 @@ function ps_GetLastTopics($NumOfRows, $feed=false)
 		{
 			switch($cell_order[$i])
 			{
-				case "New_threads" : 
-					$newthreads_cols .= "<td>".$readstate_icon."<a href=\"".$threadlink."\" title=\"".$subject_long."\">".$subject."</a></td>";
+				case "Newest_posts" : 
+					$newestposts_cols .= "<td>".$readstate_icon."<a href=\"".$threadlink."\" title=\"".$subject_long."\">".$subject."</a></td>";
 					break;
 				case "Date" :
-					$newthreads_cols .= "<td>".$newthreads_specialchar.$datetime."</td>";
+					$newestposts_cols .= "<td>".$newestposts_specialchar.$datetime."</td>";
 					break;
 				case "Starter" :
-					$newthreads_cols .= "<td><a href=\"".$profilelink."\">".$username."</a></td>";
+					$newestposts_cols .= "<td><a href=\"".$profilelink."\">".$username."</a></td>";
 					break;
 				case "Last_sender" :
-					$newthreads_cols .= "<td><a href=\"".$lastposter_profile."\">".$lastposter_uname."</a></td>";
+					$newestposts_cols .= "<td><a href=\"".$lastposter_profile."\">".$lastposter_uname."</a></td>";
 					break;
 				case "Forum" :
-					$newthreads_cols.= "<td><a href=\"".$forumlink."\" title=\"".$forumname_long."\">".$forumname."</a></td>";
+					$newestposts_cols.= "<td><a href=\"".$forumlink."\" title=\"".$forumname_long."\">".$forumname."</a></td>";
 					break;
 				default: NULL;
 			}
 		}
 
-		eval("\$newthreads_row .= \"".$templates->get("prostats_newthreads_row")."\";");
+		eval("\$newestposts_row .= \"".$templates->get("prostats_newestposts_row")."\";");
 		
 		
 		if ($feed)
@@ -1058,7 +1052,7 @@ function ps_GetLastTopics($NumOfRows, $feed=false)
 			$feeditem[$loop_counter]['lasttime'] = $newest_threads['lastpost'];
 			$feeditem[$loop_counter]['datetime'] = $datetime;
 			
-			if ($active_cells['New_threads'])
+			if ($active_cells['Newest_posts'])
 			{
 				$feeditem[$loop_counter]['subject'] = $subject;
 				$feeditem[$loop_counter]['subject_long'] = $subject_long;
@@ -1087,59 +1081,9 @@ function ps_GetLastTopics($NumOfRows, $feed=false)
 		++$loop_counter;
 	}
 	
-	eval("\$newthreads = \"".$templates->get("prostats_newthreads")."\";");
+	eval("\$newestposts = \"".$templates->get("prostats_newestposts")."\";");
 	
-	return $newthreads;
-}
-
-
-function ps_GetTopPosters($NumOfRows)
-{
-	global $mybb, $db, $templates, $theme, $lang, $ps_align;
-
-	$query = $db->query("SELECT username,postnum,uid,usergroup,displaygroup FROM ".TABLE_PREFIX."users ORDER BY postnum DESC LIMIT 0,".$NumOfRows);
-
-	while ($topposters = $db->fetch_array($query))
-	{
-		$uid = $topposters['uid'];
-		$username = ps_FormatName(htmlspecialchars_uni($topposters['username']), $topposters['usergroup'], $topposters['displaygroup']);
-		$postnum = $topposters['postnum'];
-		
-		$profilelink = get_profile_link($uid);
-		
-		eval("\$topposters_row .= \"".$templates->get("prostats_topposters_row")."\";");
-	}
-	eval("\$column_topposters = \"".$templates->get("prostats_topposters")."\";");
-
-	return $column_topposters;
-}
-
-
-function ps_GetTopReferrers($NumOfRows)
-{
-	global $mybb, $db, $templates, $theme, $lang, $ps_align;
-
-	$query = $db->query("
-	SELECT u.uid,u.username,u.usergroup,u.displaygroup,count(*) as refcount 
-	FROM ".TABLE_PREFIX."users u 
-	LEFT JOIN ".TABLE_PREFIX."users r ON (r.referrer = u.uid) 
-	WHERE r.referrer = u.uid 
-	GROUP BY r.referrer DESC 
-	ORDER BY refcount DESC 
-	LIMIT 0 ,".$NumOfRows);
-
-	while ($topreferrer = $db->fetch_array($query)) {
-		$uid = $topreferrer['uid'];
-		$username = ps_FormatName(htmlspecialchars_uni($topreferrer['username']), $topreferrer['usergroup'], $topreferrer['displaygroup']);
-		$refnum = $topreferrer['refcount'];
-		
-		$profilelink = get_profile_link($uid);
-		
-		eval("\$topreferrers_row .= \"".$templates->get("prostats_topreferrers_row")."\";");
-	}
-	eval("\$column_topreferrers = \"".$templates->get("prostats_topreferrers")."\";");
-
-	return $column_topreferrers;
+	return $newestposts;
 }
 
 
@@ -1201,6 +1145,60 @@ function ps_GetMostReplies($NumOfRows)
 }
 
 
+function ps_GetMostReputation($NumOfRows)
+{
+	global $mybb, $db, $templates, $theme, $lang, $parser, $ps_align;
+
+	$query = $db->query("
+		SELECT u.uid,u.reputation,u.username,u.usergroup,u.displaygroup 
+		FROM ".TABLE_PREFIX."users u 
+		LEFT JOIN ".TABLE_PREFIX."usergroups ug ON (u.usergroup = ug.gid) 
+		WHERE ug.usereputationsystem='1' 
+		ORDER BY u.reputation DESC 
+		LIMIT 0,".$NumOfRows
+	);
+
+	while ($most_reputations = $db->fetch_array($query)) {
+		$uid = $most_reputations['uid'];
+		$profilelink = get_profile_link($uid);
+		$repscount = intval($most_reputations['reputation']);
+		$username = ps_FormatName(htmlspecialchars_uni($most_reputations['username']), $most_reputations['usergroup'], $most_reputations['displaygroup']);
+		
+		eval("\$mostreputation_row .= \"".$templates->get("prostats_mostreputation_row")."\";");
+	}
+	eval("\$column_mostreputation = \"".$templates->get("prostats_mostreputation")."\";");
+
+	return $column_mostreputation;
+}
+
+
+function ps_GetMostThanks($NumOfRows)
+{
+	global $mybb, $db, $templates, $theme, $lang, $ps_align;
+	
+	if (!$db->field_exists("thxcount","users"))		
+	{
+		$mostthanks_row .= "<tr class=\"smalltext\"><td colspan=\"2\" align=\"center\"><small>".$lang->prostats_err_thxplugin."</small></td></tr>";
+		eval("\$column_mostthanks = \"".$templates->get("prostats_mostthanks")."\";");
+		return $column_mostthanks;
+	}
+	
+	$query = $db->query("SELECT uid,username,usergroup,displaygroup,thxcount FROM ".TABLE_PREFIX."users ORDER BY thxcount DESC LIMIT 0,".$NumOfRows);
+
+	while ($most_thanks = $db->fetch_array($query))
+	{
+		$uid = $most_thanks['uid'];
+		$username = ps_FormatName(htmlspecialchars_uni($most_thanks['username']), $most_thanks['usergroup'], $most_thanks['displaygroup']);
+		$thxnum = $most_thanks['thxcount'];
+		$profilelink = get_profile_link($uid);		
+		eval("\$mostthanks_row .= \"".$templates->get("prostats_mostthanks_row")."\";");
+	}
+	eval("\$column_mostthanks = \"".$templates->get("prostats_mostthanks")."\";");
+
+	return $column_mostthanks;
+}
+
+
 function ps_GetMostViewed($NumOfRows)
 {
 	global $mybb, $db, $templates, $theme, $lang, $unviewwhere, $parser, $ps_align;
@@ -1256,33 +1254,6 @@ function ps_GetMostViewed($NumOfRows)
 	eval("\$column_mostviews = \"".$templates->get("prostats_mostviews")."\";");
 
 	return $column_mostviews;
-}
-
-
-function ps_GetMostThanks($NumOfRows)
-{
-	global $mybb, $db, $templates, $theme, $lang, $ps_align;
-	
-	if (!$db->field_exists("thxcount","users"))		
-	{
-		$mostthanks_row .= "<tr class=\"smalltext\"><td colspan=\"2\" align=\"center\"><small>".$lang->prostats_err_thxplugin."</small></td></tr>";
-		eval("\$column_mostthanks = \"".$templates->get("prostats_mostthanks")."\";");
-		return $column_mostthanks;
-	}
-	
-	$query = $db->query("SELECT uid,username,usergroup,displaygroup,thxcount FROM ".TABLE_PREFIX."users ORDER BY thxcount DESC LIMIT 0,".$NumOfRows);
-
-	while ($most_thanks = $db->fetch_array($query))
-	{
-		$uid = $most_thanks['uid'];
-		$username = ps_FormatName(htmlspecialchars_uni($most_thanks['username']), $most_thanks['usergroup'], $most_thanks['displaygroup']);
-		$thxnum = $most_thanks['thxcount'];
-		$profilelink = get_profile_link($uid);		
-		eval("\$mostthanks_row .= \"".$templates->get("prostats_mostthanks_row")."\";");
-	}
-	eval("\$column_mostthanks = \"".$templates->get("prostats_mostthanks")."\";");
-
-	return $column_mostthanks;
 }
 
 
@@ -1368,20 +1339,70 @@ function ps_GetTopDownloads($NumOfRows)
 }
 
 
+function ps_GetTopPosters($NumOfRows)
+{
+	global $mybb, $db, $templates, $theme, $lang, $ps_align;
+
+	$query = $db->query("SELECT username,postnum,uid,usergroup,displaygroup FROM ".TABLE_PREFIX."users ORDER BY postnum DESC LIMIT 0,".$NumOfRows);
+
+	while ($topposters = $db->fetch_array($query))
+	{
+		$uid = $topposters['uid'];
+		$username = ps_FormatName(htmlspecialchars_uni($topposters['username']), $topposters['usergroup'], $topposters['displaygroup']);
+		$postnum = $topposters['postnum'];
+		
+		$profilelink = get_profile_link($uid);
+		
+		eval("\$topposters_row .= \"".$templates->get("prostats_topposters_row")."\";");
+	}
+	eval("\$column_topposters = \"".$templates->get("prostats_topposters")."\";");
+
+	return $column_topposters;
+}
+
+
+function ps_GetTopReferrers($NumOfRows)
+{
+	global $mybb, $db, $templates, $theme, $lang, $ps_align;
+
+	$query = $db->query("
+	SELECT u.uid,u.username,u.usergroup,u.displaygroup,count(*) as refcount 
+	FROM ".TABLE_PREFIX."users u 
+	LEFT JOIN ".TABLE_PREFIX."users r ON (r.referrer = u.uid) 
+	WHERE r.referrer = u.uid 
+	GROUP BY r.referrer DESC 
+	ORDER BY refcount DESC 
+	LIMIT 0 ,".$NumOfRows);
+
+	while ($topreferrer = $db->fetch_array($query)) {
+		$uid = $topreferrer['uid'];
+		$username = ps_FormatName(htmlspecialchars_uni($topreferrer['username']), $topreferrer['usergroup'], $topreferrer['displaygroup']);
+		$refnum = $topreferrer['refcount'];
+		
+		$profilelink = get_profile_link($uid);
+		
+		eval("\$topreferrers_row .= \"".$templates->get("prostats_topreferrers_row")."\";");
+	}
+	eval("\$column_topreferrers = \"".$templates->get("prostats_topreferrers")."\";");
+
+	return $column_topreferrers;
+}
+
+
 function ps_MakeTable()
 {
 	global $mybb, $theme, $lang, $templates, $parser, $lightbulb, $unread_forums, $ps_align;
 	$lang->load("prostats");
 	
-	$right_cols = $left_cols = $middle_cols = $extra_content = $extra_content_1_2 = $extra_content_3_4 = $extra_content_5_6 = $prostats_copyright = "";
+	$right_cols = $left_cols = $middle_cols = $extra_content = $extra_content_1_2 = $extra_content_3_4 = $extra_content_5_6 = "";
 	$num_columns = 0;
 	
 	$ps_align = $lang->settings['rtl'] ? "right" : "left";
 	$ps_ralign = $lang->settings['rtl'] ? "left" : "right";
 	
-	if ($mybb->settings['ps_last_topics'] == 1)
+	if ($mybb->settings['ps_newest_posts'] == 1)
 	{
-		$middle_cols = ps_GetLastTopics($mybb->settings['ps_num_rows']);
+		$middle_cols = ps_GetNewestPosts($mybb->settings['ps_num_rows']);
 		$num_columns = 4;
 	}
 	
@@ -1451,12 +1472,12 @@ function ps_MakeTable()
 	if ($lang->settings['rtl'])
 	{
 		$extra_content = $extra_content_5_6 . $extra_content_3_4 . $extra_content_1_2;
-		$mybb->settings['ps_last_topics_pos'] ? $right_cols = $extra_content : $left_cols = $extra_content;
+		$mybb->settings['ps_newest_posts_pos'] ? $right_cols = $extra_content : $left_cols = $extra_content;
 	}
 	else
 	{
 		$extra_content = $extra_content_1_2 . $extra_content_3_4 . $extra_content_5_6;
-		$mybb->settings['ps_last_topics_pos'] ? $left_cols = $extra_content : $right_cols = $extra_content;
+		$mybb->settings['ps_newest_posts_pos'] ? $left_cols = $extra_content : $right_cols = $extra_content;
 	}
 
 	$prostats_content = $left_cols . $middle_cols . $right_cols;
@@ -1470,15 +1491,6 @@ function ps_MakeTable()
 		{
 			eval("\$trow_message_down = \"".$templates->get("prostats_message")."\";");
 		}
-	}
-	
-	$ps_cr_dyn = "<div id=\"prostats_cpr\" style=\"text-align:right;font-family:tahoma;font-size:9px;\"><a href=\"http://www.mybbhelp.ir/\" target=\"_blank\">پشتیبانی فارسی MyBB</a></div><script type=\"text/javascript\">/*<!--*/$(\"prostats_cpr\").update(\"ProStats by <a href=\\\"http://www.mybbhelp.ir/\\\" target=\\\"_blank\\\">MybbHelp.ir</a>\");/*-->*/</script>";
-	$ps_cr_stk = "<div id=\"prostats_cpr\" style=\"text-align:right;font-family:tahoma;font-size:9px;\">ProStats by  <a href=\"http://www.mybbhelp.ir/\" target=\"_blank\">MybbHelp.ir</a></div>";
-	
-	if ($mybb->settings['ps_show_copyright']){
-		$prostats_copyright = (THIS_SCRIPT == 'xmlhttp.php' ? $ps_cr_stk : $ps_cr_dyn);
-	}else{
-		$prostats_copyright = "<div id=\"prostats_cpr\" style=\"position:absolute;top:-500px;\"><h1><strong><a href=\"http://www.mybbhelp.ir/\" target=\"_blank\">پشتیبانی فارسی MyBB</a></strong></h1></div><script type=\"text/javascript\">/*<!--*/$(\"prostats_cpr\").update(\"\");/*-->*/</script>";
 	}
 	
 	eval("\$prostats = \"".$templates->get("prostats")."\";");
@@ -1504,13 +1516,14 @@ function ps_GetExtraData($cellnum,$fullrows=false)
 	switch($cellnum)
 	{
 		case 0: $res = ''; break;
-		case 1: $res = ps_GetTopPosters($rows); break;
-		case 2: $res = ps_GetTopReferrers($rows); break;
-		case 3: $res = ps_GetMostReplies($rows); break;
+		case 1: $res = ps_GetMostReplies($rows); break;
+		case 2: $res = ps_GetMostReputation($rows); break;
+		case 3: $res = ps_GetMostThanks($rows); break;
 		case 4: $res = ps_GetMostViewed($rows); break;
-		case 5: $res = ps_GetMostThanks($rows); break;
-		case 6: $res = ps_GetNewMembers($rows); break;
-		case 7: $res = ps_GetTopDownloads($rows); break;
+		case 5: $res = ps_GetNewMembers($rows); break;
+		case 6: $res = ps_GetTopDownloads($rows); break;
+		case 7: $res = ps_GetTopPosters($rows); break;
+		case 8: $res = ps_GetTopReferrers($rows); break;
 		default: $res = ''; NULL;
 	}
 	
@@ -1657,9 +1670,11 @@ function ps_GetTY($format='m-d', $stamp='', $offset='', $ty=1)
 
 function prostats_run_ajax()
 {
-	global $mybb, $lang, $parser, $prostats_tbl;
+	global $mybb, $lang, $parser, $session, $prostats_tbl;
 	
 	if (!$mybb->settings['ps_active']) {return false;}
+	
+	if ($mybb->settings['ps_hidefrombots'] && !empty($session->is_spider)) {return false;}
 	
 	if (!is_object($parser))
 	{
@@ -1683,9 +1698,11 @@ function prostats_run_ajax()
 
 function prostats_run_feed()
 {
-	global $mybb, $db, $templates, $theme, $lang, $unviewwhere, $parser, $lightbulb, $trow, $newthreads_cols_name, $newthreads_cols, $colspan, $feeditem;
+	global $mybb, $db, $templates, $theme, $lang, $unviewwhere, $parser, $session, $lightbulb, $trow, $newestposts_cols_name, $newestposts_cols, $colspan, $feeditem;
 	
 	if (!$mybb->settings['ps_active'] || !$mybb->settings['ps_xml_feed']) {return false;}
+	
+	if ($mybb->settings['ps_hidefrombots'] && !empty($session->is_spider)) {return false;}
 	
 	if (!is_object($parser))
 	{
@@ -1700,7 +1717,7 @@ function prostats_run_feed()
 		$seo = 1;
 	}
 	
-	ps_GetLastTopics($mybb->settings['ps_num_rows'], true);
+	ps_GetNewestPosts($mybb->settings['ps_num_rows'], true);
 	
 	//echo '<pre>';print_r($feeditem);echo '</pre>';exit;//just for test! ;-)
 
