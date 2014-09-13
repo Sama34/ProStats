@@ -2,10 +2,10 @@
 /*
  ___________________________________________________
 |													|
-| Plugin ProStats 1.7.2								|
+| Plugin ProStats 1.7.3								|
 | (c) 2008-2010 by SaeedGh (SaeehGhMail@Gmail.com)	|
 | Website: http://www.mybbhelp.ir					|
-| Last edit: 2010-04-13								|
+| Last edit: 2010-04-21								|
 |___________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -27,6 +27,7 @@ if (!defined("IN_MYBB"))
 {
 	die("Direct initialization of this file is not allowed.");
 }
+
 
 $plugins->add_hook('global_start', 'prostats_run_global');
 $plugins->add_hook('pre_output_page', 'prostats_run_pre_output');
@@ -55,7 +56,7 @@ function prostats_info()
 		'website'		=>	'http://www.mybbhelp.ir',
 		'author'		=>	'SaeedGh',
 		'authorsite'	=>	'http://www.mybbhelp.ir',
-		'version'		=>	'1.7.2',
+		'version'		=>	'1.7.3',
 		'guid'			=>	'124b68d05dcdaf6b7971050baddf340f',
 		'compatibility'	=>	'14*,16*'
 	);
@@ -786,6 +787,12 @@ function prostats_run_index()
 
 	if (!$mybb->settings['ps_active']) {return false;}
 
+	if (!is_object($parser))
+	{
+		require_once MYBB_ROOT.'inc/class_parser.php';
+		$parser = new postParser;
+	}
+	
 	if (ceil($mybb->settings['ps_num_rows']) != $mybb->settings['ps_num_rows'] || ceil($mybb->settings['ps_subject_length']) != $mybb->settings['ps_subject_length']){return false;}
 	if (intval($mybb->settings['ps_num_rows']) < 3) {return false;}
 	
@@ -819,6 +826,12 @@ function prostats_run_portal()
 	
 	if (!$mybb->settings['ps_active']) {return false;}
 
+	if (!is_object($parser))
+	{
+		require_once MYBB_ROOT.'inc/class_parser.php';
+		$parser = new postParser;
+	}
+	
 	if (ceil($mybb->settings['ps_num_rows']) != $mybb->settings['ps_num_rows'] || ceil($mybb->settings['ps_subject_length']) != $mybb->settings['ps_subject_length']){return false;}
 	
 	if (!$mybb->settings['ps_portal']) {return false;}
@@ -845,7 +858,13 @@ function prostats_run_pre_output($contents)
 	global $mybb, $parser, $prostats_tbl, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
 
 	if (!$mybb->settings['ps_active']) {return false;}
-
+	
+	if (!is_object($parser))
+	{
+		require_once MYBB_ROOT.'inc/class_parser.php';
+		$parser = new postParser;
+	}
+	
 	if (ceil($mybb->settings['ps_num_rows']) != $mybb->settings['ps_num_rows'] || ceil($mybb->settings['ps_subject_length']) != $mybb->settings['ps_subject_length']){return false;}
 	if (intval($mybb->settings['ps_num_rows']) < 3) {return false;}
 	
@@ -867,6 +886,12 @@ function ps_GetLastTopics($NumOfRows, $feed=false)
 {
 	global $mybb, $db, $templates, $theme, $lang, $unviewwhere, $parser, $lightbulb, $trow, $newthreads_cols_name, $newthreads_cols, $colspan, $feeditem;
 
+	if (!is_object($parser))
+	{
+		require_once MYBB_ROOT.'inc/class_parser.php';
+		$parser = new postParser;
+	}
+	
 	$query = $db->query ("
 		SELECT t.subject,t.username,t.uid,t.tid,t.fid,t.lastpost,t.lastposter,t.lastposteruid,t.replies,tr.uid AS truid,tr.dateline,f.name 
 		FROM ".TABLE_PREFIX."threads t 
@@ -1120,6 +1145,12 @@ function ps_GetMostReplies($NumOfRows)
 {
 	global $mybb, $db, $templates, $theme, $lang, $unviewwhere, $parser, $ps_align;
 
+	if (!is_object($parser))
+	{
+		require_once MYBB_ROOT.'inc/class_parser.php';
+		$parser = new postParser;
+	}
+	
 	$query = $db->query ("
 		SELECT t.subject,t.tid,t.replies,t.lastpost,tr.uid AS truid,tr.dateline 
 		FROM ".TABLE_PREFIX."threads t 
@@ -1171,7 +1202,13 @@ function ps_GetMostReplies($NumOfRows)
 function ps_GetMostViewed($NumOfRows)
 {
 	global $mybb, $db, $templates, $theme, $lang, $unviewwhere, $parser, $ps_align;
-
+	
+	if (!is_object($parser))
+	{
+		require_once MYBB_ROOT.'inc/class_parser.php';
+		$parser = new postParser;
+	}
+	
 	$query = $db->query ("
 		SELECT t.subject,t.tid,t.lastpost,t.views,tr.uid AS truid,tr.dateline 
 		FROM ".TABLE_PREFIX."threads t 
@@ -1285,6 +1322,12 @@ function ps_GetNewMembers($NumOfRows)
 function ps_GetTopDownloads($NumOfRows)
 {
 	global $mybb, $db, $templates, $theme, $lang, $parser, $ps_align;
+	
+	if (!is_object($parser))
+	{
+		require_once MYBB_ROOT.'inc/class_parser.php';
+		$parser = new postParser;
+	}
 	
 	$query = $db->query("
 		SELECT p.subject,a.pid,a.downloads,a.filename 
@@ -1615,9 +1658,12 @@ function prostats_run_ajax()
 	global $mybb, $lang, $parser, $prostats_tbl;
 	
 	if (!$mybb->settings['ps_active']) {return false;}
-
-	require_once MYBB_ROOT.'inc/class_parser.php';
-	$parser = new postParser;
+	
+	if (!is_object($parser))
+	{
+		require_once MYBB_ROOT.'inc/class_parser.php';
+		$parser = new postParser;
+	}
 	
 	if ($mybb->input['action'] != "prostats_reload" || $mybb->request_method != "post"){return false;exit;}
 
@@ -1638,9 +1684,12 @@ function prostats_run_feed()
 	global $mybb, $db, $templates, $theme, $lang, $unviewwhere, $parser, $lightbulb, $trow, $newthreads_cols_name, $newthreads_cols, $colspan, $feeditem;
 	
 	if (!$mybb->settings['ps_active'] || !$mybb->settings['ps_xml_feed']) {return false;}
-
-	require_once MYBB_ROOT.'inc/class_parser.php';
-	$parser = new postParser;
+	
+	if (!is_object($parser))
+	{
+		require_once MYBB_ROOT.'inc/class_parser.php';
+		$parser = new postParser;
+	}
 	
 	$seo = 0;
 	
