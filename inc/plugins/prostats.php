@@ -1982,6 +1982,11 @@ function ps_GetUnviewable($name="")
 	$unviewwhere = $comma = '';
 	$name ? $name .= '.' : NULL;
 	$unviewable = get_unviewable_forums();
+
+	if($inactive = get_inactive_forums())
+	{
+		$mybb->settings['ps_ignoreforums'] .= ','.$inactive;
+	}
 	
 	if ($mybb->settings['ps_ignoreforums'])
 	{
