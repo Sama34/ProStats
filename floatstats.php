@@ -2,11 +2,11 @@
 /*
  _______________________________________________________
 |                                                       |
-| Name: FloatStats 1.1                                  |
+| Name: FloatStats 1.2                                  |
 | Type: MyBB Plugin's additional script                 |
 | Author: SaeedGh (SaeehGhMail@Gmail.com)               |
 | Support: http://prostats.wordpress.com/support/       |
-| Last edit: July 28th, 2011                            |
+| Last edit: August 5th, 2011                           |
 |_______________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -238,14 +238,9 @@ function fs_js()
 {
 	global $mybb, $config;
 	header("Content-type: text/javascript");
-	
-	if ($mybb->user['uid'] && $mybb->usergroup['cancp'])
-	{
-		echo 'var hashcode = "'.md5($config['database']['username'] . $config['database']['password']).'";';
-		echo "\n";
-		echo 'var cur_admin_id = "'.$mybb->user['uid'].'";';	
 
 ?>
+
 var ScriptTag="<script>";
 
 var BrowserDetect = {
@@ -293,8 +288,18 @@ var BrowserDetect = {
 BrowserDetect.init();
 
 if (BrowserDetect.browser != 'Firefox' && BrowserDetect.browser != 'Opera'){
+	var alertMsg = '<div class="error" id="flash_message">Two advanced features of ProStats ("FloatStats" & "Instant Viewer") are disabled because your web-browser doesn\'t support them. Those features are tested in Firefox 5 and Opera 11.5.</div>';
+	Element.insert( $('inner'), {'top':alertMsg} );
 	process.exit(1);
 }
+
+<?php 
+	if ($mybb->user['uid'] && $mybb->usergroup['cancp'])
+	{
+		echo 'var hashcode = "'.md5($config['database']['username'] . $config['database']['password']).'";';
+		echo "\n";
+		echo 'var cur_admin_id = "'.$mybb->user['uid'].'";';	
+?>
 
 var welcomeDefTop = $("welcome").offsetTop;
 
@@ -569,7 +574,10 @@ document.observe('dom:loaded', function() {
 
 <?php 
 	} else {
-		echo 'alert("You are logged in AdminCP but not in your Forum! Please login there with current user and then come back and refresh this page.");';
+?>
+	var alertMsg = '<div class="error" id="flash_message">Two advanced features of ProStats ("FloatStats" & "Instant Viewer") are disabled because you are only logged in AdminCP, not in your Forum! In order to active those features, please log in your forum with current user and then come back and refresh this page.</div>';
+	Element.insert( $('inner'), {'top':alertMsg} );
+<?php 
 	}
 	exit;
 }

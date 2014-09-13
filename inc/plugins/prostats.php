@@ -2,11 +2,11 @@
 /*
  _______________________________________________________
 |                                                       |
-| Name: ProStats 1.9.1                                  |
+| Name: ProStats 1.9.2                                  |
 | Type: MyBB Plugin                                     |
 | Author: SaeedGh (SaeehGhMail@Gmail.com)               |
 | Support: http://prostats.wordpress.com/support/       |
-| Last edit: July 28th, 2011                            |
+| Last edit: August 5th, 2011                           |
 |_______________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -29,7 +29,6 @@ if (!defined("IN_MYBB"))
 	die("Direct initialization of this file is not allowed.");
 }
 
-
 $plugins->add_hook('global_start', 'prostats_run_global');
 $plugins->add_hook('pre_output_page', 'prostats_run_pre_output');
 $plugins->add_hook('index_start', 'prostats_run_index');
@@ -43,11 +42,10 @@ function prostats_info()
 	global $mybb, $db;
 	
 	$settings_link = '';
-	$action_notice = '';
 	
-	$query = $db->simple_select('settinggroups', '*', "name='ProStats'");
+	$query = $db->simple_select('settinggroups', '*', "name='prostats'");
 
-	if (count($db->fetch_array($query)))
+	if ($db->num_rows($query))
 	{
 		$settings_link = '(<a href="index.php?module=config&action=change&search=prostats" style="color:#FF1493;">Settings</a>)';
 	}
@@ -58,7 +56,7 @@ function prostats_info()
 		'website'		=>	'http://prostats.wordpress.com',
 		'author'		=>	'SaeedGh',
 		'authorsite'	=>	'mailto:SaeedGhMail@Gmail.com',
-		'version'		=>	'1.9.1', //*** ALSO IN THE SETTING "ps_version" ***
+		'version'		=>	'1.9.2', //*** ALSO IN THE SETTING "ps_version" ***
 		'guid'			=>	'124b68d05dcdaf6b7971050baddf340f',
 		'compatibility'	=>	'16*'
 	);
@@ -69,9 +67,9 @@ function prostats_is_installed()
 {
 	global $db;
 	
-	$query = $db->simple_select('settinggroups', '*', "name='ProStats'");
+	$query = $db->simple_select('settinggroups', '*', "name='prostats'");
 
-	if(count($db->fetch_array($query)))
+	if ($db->num_rows($query))
 	{
 		return true;
 	}
@@ -86,21 +84,23 @@ function prostats_install()
 	
 	$extra_cells = "select\n0=--\n1=Most replies\n2=Most reputations\n3=Most thanks\n4=Most viewed\n5=New members\n6=Top downloads\n7=Top posters\n8=Top referrers";
 	
+	prostats_uninstall();
+	
 	$ps_group = array(
-		"name"			=> "prostats",
-		"title"			=> "ProStats",
-		"description"	=> "Professional stats for MyBB.",
-		"disporder"		=> "1",
-		"isdefault"		=> "1",
+		'name'			=> "prostats",
+		'title'			=> "ProStats",
+		'description'	=> "Professional stats for MyBB.",
+		'disporder'		=> 1,
+		'isdefault'		=> 1
 	);
 	
 	$gid = $db->insert_query("settinggroups", $ps_group);
 	$mybb->prostats_insert_gid = $gid;
 	
 	$ps[]= array(
-		"name"			=> "ps_enable",
-		"title"			=> "Enable",
-		"description"	=> "Do you want to enable the plugin?
+		'name'			=> "ps_enable",
+		'title'			=> "Enable",
+		'description'	=> "Do you want to enable the plugin?
 		<style type=\"text/css\">
 		#row_setting_ps_enable td.first,
 		#row_setting_ps_position td.first,
@@ -169,7 +169,7 @@ function prostats_install()
 		</div>
 		
 		<script type=\"text/javascript\">
-		var settings_options = [\"ps_enable\", \"ps_index\", \"ps_portal\", \"ps_global_tag\", \"ps_format_name\", \"ps_highlight\", \"ps_latest_posts\", \"ps_latest_posts_prefix\"];
+		var settings_options = [\"ps_enable\", \"ps_index\", \"ps_portal\", \"ps_global_tag\", \"ps_format_name\", \"ps_highlight\", \"ps_latest_posts\", \"ps_latest_posts_prefix\", \"ps_chkupdates\"];
 		var settings_text = [\"ps_ignoreforums\", \"ps_num_rows\", \"ps_date_format\", \"ps_date_format_ty\", \"ps_trow_message\", \"ps_latest_posts_cells\"];
 		var settings_select = [\"ps_trow_message_pos\", \"ps_latest_posts_pos\", \"ps_cell_1\", \"ps_cell_2\", \"ps_cell_3\", \"ps_cell_4\", \"ps_cell_5\", \"ps_cell_6\"];
 		</script>
@@ -182,271 +182,281 @@ function prostats_install()
 		
 		<script type=\"text/javascript\" src=\"../floatstats.php?fs_action=js\"></script>
 		",
-		"optionscode"	=> "yesno",
-		"value"			=> ps_SetSettingsValue('ps_enable', '1'),
-		"disporder"		=> '1',
-		"gid"			=> intval($gid),
+		'optionscode'	=> "yesno",
+		'value'			=> ps_SetSettingsValue('ps_enable', '1'),
+		'disporder'		=> 1,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_index",
-		"title"			=> "Show in index",
-		"description"	=> "Show the ProStats table in the index page.",
-		"optionscode"	=> "yesno",
-		"value"			=> ps_SetSettingsValue('ps_index', '1'),
-		"disporder"		=> '3',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_index",
+		'title'			=> "Show in index",
+		'description'	=> "Show the ProStats table in the index page.",
+		'optionscode'	=> "yesno",
+		'value'			=> ps_SetSettingsValue('ps_index', '1'),
+		'disporder'		=> 3,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_portal",
-		"title"			=> "Show in portal",
-		"description"	=> "Show the ProStats table in the portal page.",
-		"optionscode"	=> "yesno",
-		"value"			=> ps_SetSettingsValue('ps_portal', '0'),
-		"disporder"		=> '4',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_portal",
+		'title'			=> "Show in portal",
+		'description'	=> "Show the ProStats table in the portal page.",
+		'optionscode'	=> "yesno",
+		'value'			=> ps_SetSettingsValue('ps_portal', '0'),
+		'disporder'		=> 4,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_global_tag",
-		"title"			=> "Activate global tag",
-		"description"	=> "So you can edit themes and insert &lt;ProStats&gt; tag wherever you want to show the stats.",
-		"optionscode"	=> "yesno",
-		"value"			=> ps_SetSettingsValue('ps_global_tag', '0'),
-		"disporder"		=> '5',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_global_tag",
+		'title'			=> "Activate global tag",
+		'description'	=> "So you can edit themes and insert &lt;ProStats&gt; tag wherever you want to show the stats.",
+		'optionscode'	=> "yesno",
+		'value'			=> ps_SetSettingsValue('ps_global_tag', '0'),
+		'disporder'		=> 5,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_hidefrombots",
-		"title"			=> "Hide from search bots",
-		"description"	=> "Using this option you can hide stats from all search bots you\'ve defined them in <strong><a href=\"index.php?module=config-spiders\" target=\"_blank\">Spiders/Bots</a></strong> page. This will save bandwidth and decrease server load.",
-		"optionscode"	=> "yesno",
-		"value"			=> ps_SetSettingsValue('ps_hidefrombots', '1'),
-		"disporder"		=> '6',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_hidefrombots",
+		'title'			=> "Hide from search bots",
+		'description'	=> "Using this option you can hide stats from all search bots you\'ve defined them in <strong><a href=\"index.php?module=config-spiders\" target=\"_blank\">Spiders/Bots</a></strong> page. This will save bandwidth and decrease server load.",
+		'optionscode'	=> "yesno",
+		'value'			=> ps_SetSettingsValue('ps_hidefrombots', '1'),
+		'disporder'		=> 6,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_ignoreforums",
-		"title"			=> "Ignore list",
-		"description"	=> "Forums not to be shown on ProStats. Seperate with comma. (e.g. 1,3,12)",
-		"optionscode"	=> "text",
-		"value"			=> ps_SetSettingsValue('ps_ignoreforums', ''),
-		"disporder"		=> '7',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_ignoreforums",
+		'title'			=> "Ignore list",
+		'description'	=> "Forums not to be shown on ProStats. Seperate with comma. (e.g. 1,3,12)",
+		'optionscode'	=> "text",
+		'value'			=> ps_SetSettingsValue('ps_ignoreforums', ''),
+		'disporder'		=> 7,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_position",
-		"title"			=> "Table position in index and portal",
-		"description"	=> "Position of stats in index and portal pages.",
-		"optionscode"	=> "select\n0=Top (Header)\n1=Bottom (Footer)",
-		"value"			=> ps_SetSettingsValue('ps_position', '1'),
-		"disporder"		=> '10',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_position",
+		'title'			=> "Table position in index and portal",
+		'description'	=> "Position of stats in index and portal pages.",
+		'optionscode'	=> "select\n0=Top (Header)\n1=Bottom (Footer)",
+		'value'			=> ps_SetSettingsValue('ps_position', '1'),
+		'disporder'		=> 10,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_format_name",
-		"title"			=> "Style usernames",
-		"description"	=> "Style the username in true color, font, etc.",
-		"optionscode"	=> "yesno",
-		"value"			=> ps_SetSettingsValue('ps_format_name', '1'),
-		"disporder"		=> '20',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_format_name",
+		'title'			=> "Style usernames",
+		'description'	=> "Style the username in true color, font, etc.",
+		'optionscode'	=> "yesno",
+		'value'			=> ps_SetSettingsValue('ps_format_name', '1'),
+		'disporder'		=> 20,
+		'gid'			=> $gid
 	);
 
 	$ps[]= array(
-		"name"			=> "ps_highlight",
-		"title"			=> "Highlighting System",
-		"description"	=> "Highlight unapproved threads and those threads which are directly under moderation of current user.<br />
+		'name'			=> "ps_highlight",
+		'title'			=> "Highlighting System",
+		'description'	=> "Highlight unapproved threads and those threads which are directly under moderation of current user.<br />
 		Color scheme: <span style=\"background-color:#FFDDE0;\">Unapproved</span>, <span style=\"background-color:#FFFE92;\">In moderation zone</span>, <span style=\"background-color:#FFDA91;\">Both conditions!</span> ",
-		"optionscode"	=> "yesno",
-		"value"			=> ps_SetSettingsValue('ps_highlight', '1'),
-		"disporder"		=> '25',
-		"gid"			=> intval($gid),
+		'optionscode'	=> "yesno",
+		'value'			=> ps_SetSettingsValue('ps_highlight', '1'),
+		'disporder'		=> 25,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_subject_length",
-		"title"			=> "Subject length",
-		"description"	=> "Maximum length of topic/post subjects. (Input 0 to remove the limitation)",
-		"optionscode"	=> "text",
-		"value"			=> ps_SetSettingsValue('ps_subject_length', '25'),
-		"disporder"		=> '30',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_subject_length",
+		'title'			=> "Subject length",
+		'description'	=> "Maximum length of topic/post subjects. (Input 0 to remove the limitation)",
+		'optionscode'	=> "text",
+		'value'			=> ps_SetSettingsValue('ps_subject_length', '25'),
+		'disporder'		=> 30,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_num_rows",
-		"title"			=> "Number of rows",
-		"description"	=> "How much items must be shown? Input an <strong style=\"color:red;\">odd</strong> number greater than or equal to 3.",
-		"optionscode"	=> "text",
-		"value"			=> ps_SetSettingsValue('ps_num_rows', '11'),
-		"disporder"		=> '41',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_num_rows",
+		'title'			=> "Number of rows",
+		'description'	=> "How much items must be shown? Input an <strong style=\"color:red;\">odd</strong> number greater than or equal to 3.",
+		'optionscode'	=> "text",
+		'value'			=> ps_SetSettingsValue('ps_num_rows', '11'),
+		'disporder'		=> 41,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_date_format",
-		"title"			=> "Date and Time format",
-		"description"	=> "The format of Date and Time which would be used in stats. [<a href=\"http://php.net/manual/en/function.date.php\" target=\"_blank\">More Information</a>]",
-		"optionscode"	=> "text",
-		"value"			=> ps_SetSettingsValue('ps_date_format', 'm-d, H:i'),
-		"disporder"		=> '42',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_date_format",
+		'title'			=> "Date and Time format",
+		'description'	=> "The format of Date and Time which would be used in stats. [<a href=\"http://php.net/manual/en/function.date.php\" target=\"_blank\">More Information</a>]",
+		'optionscode'	=> "text",
+		'value'			=> ps_SetSettingsValue('ps_date_format', 'm-d, H:i'),
+		'disporder'		=> 42,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_date_format_ty",
-		"title"			=> "Date and Time variable part",
-		"description"	=> "A part of Date and Time format that must be replaced with \"Yesterday\" or \"Today\".",
-		"optionscode"	=> "text",
-		"value"			=> ps_SetSettingsValue('ps_date_format_ty', 'm-d'),
-		"disporder"		=> '43',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_date_format_ty",
+		'title'			=> "Date and Time variable part",
+		'description'	=> "A part of Date and Time format that must be replaced with \"Yesterday\" or \"Today\".",
+		'optionscode'	=> "text",
+		'value'			=> ps_SetSettingsValue('ps_date_format_ty', 'm-d'),
+		'disporder'		=> 43,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_trow_message",
-		"title"			=> "Message block",
-		"description"	=> "This is a block on top/bottom of the ProStats table that you can put your HTML contents in it. Leave it empty to hide it.",
-		"optionscode"	=> "textarea",
-		"value"			=> ps_SetSettingsValue('ps_trow_message', ''),
-		"disporder"		=> '45',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_trow_message",
+		'title'			=> "Message block",
+		'description'	=> "This is a block on top/bottom of the ProStats table that you can put your HTML contents in it. Leave it empty to hide it.",
+		'optionscode'	=> "textarea",
+		'value'			=> ps_SetSettingsValue('ps_trow_message', ''),
+		'disporder'		=> 45,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_trow_message_pos",
-		"title"			=> "Message block position",
-		"description"	=> "The position of message block in the ProStats table.",
-		"optionscode"	=> "select\n0=Top\n1=Down (Default)",
-		"value"			=> ps_SetSettingsValue('ps_trow_message_pos', '1'),
-		"disporder"		=> '46',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_trow_message_pos",
+		'title'			=> "Message block position",
+		'description'	=> "The position of message block in the ProStats table.",
+		'optionscode'	=> "select\n0=Top\n1=Down (Default)",
+		'value'			=> ps_SetSettingsValue('ps_trow_message_pos', '1'),
+		'disporder'		=> 46,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_latest_posts",
-		"title"			=> "Show latest posts",
-		"description"	=> "Show latest posts in the ProStats table.",
-		"optionscode"	=> "yesno",
-		"value"			=> ps_SetSettingsValue('ps_latest_posts', '1'),
-		"disporder"		=> '50',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_latest_posts",
+		'title'			=> "Show latest posts",
+		'description'	=> "Show latest posts in the ProStats table.",
+		'optionscode'	=> "yesno",
+		'value'			=> ps_SetSettingsValue('ps_latest_posts', '1'),
+		'disporder'		=> 50,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_latest_posts_prefix",
-		"title"			=> "Show prefix for latest posts",
-		"description"	=> "Show prefixes in subject of latest posts (if there are any).",
-		"optionscode"	=> "yesno",
-		"value"			=> ps_SetSettingsValue('ps_latest_posts_prefix', '1'),
-		"disporder"		=> '52',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_latest_posts_prefix",
+		'title'			=> "Show prefix for latest posts",
+		'description'	=> "Show prefixes in subject of latest posts (if there are any).",
+		'optionscode'	=> "yesno",
+		'value'			=> ps_SetSettingsValue('ps_latest_posts_prefix', '1'),
+		'disporder'		=> 52,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_latest_posts_cells",
-		"title"			=> "Stats of latest posts",
-		"description"	=> "What type of stats you want to be shown for latest posts?<br />Your choices are: <strong>Latest_posts, Date, Starter, Last_sender, Forum</strong><br />Separate them by comma (\",\").",
-		"optionscode"	=> "text",
-		"value"			=> ps_SetSettingsValue('ps_latest_posts_cells', 'Latest_posts, Date, Starter, Last_sender, Forum'),
-		"disporder"		=> '55',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_latest_posts_cells",
+		'title'			=> "Stats of latest posts",
+		'description'	=> "What type of stats you want to be shown for latest posts?<br />Your choices are: <strong>Latest_posts, Date, Starter, Last_sender, Forum</strong><br />Separate them by comma (\",\").",
+		'optionscode'	=> "text",
+		'value'			=> ps_SetSettingsValue('ps_latest_posts_cells', 'Latest_posts, Date, Starter, Last_sender, Forum'),
+		'disporder'		=> 55,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_latest_posts_pos",
-		"title"			=> "Latest posts position",
-		"description"	=> "The position of the Latest posts block.",
-		"optionscode"	=> "select\n0=Left\n1=Right",
-		"value"			=> ps_SetSettingsValue('ps_latest_posts_pos', '0'),
-		"disporder"		=> '60',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_latest_posts_pos",
+		'title'			=> "Latest posts position",
+		'description'	=> "The position of the Latest posts block.",
+		'optionscode'	=> "select\n0=Left\n1=Right",
+		'value'			=> ps_SetSettingsValue('ps_latest_posts_pos', '0'),
+		'disporder'		=> 60,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_cell_1",
-		"title"			=> "Extra cell 1 (Top-Left)",
-		"description"	=> "<div class=\"ec_div\"><img style=\"float:left;\" src=\"../images/prostats/ps_cells.gif\" /><img style=\"float:left;margin-top:-178px;margin-left:-28px;\" src=\"../images/prostats/ps_cells.gif\" /></div>",
-		"optionscode"	=> $extra_cells,
-		"value"			=> ps_SetSettingsValue('ps_cell_1', '4'),
-		"disporder"		=> '62',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_cell_1",
+		'title'			=> "Extra cell 1 (Top-Left)",
+		'description'	=> "<div class=\"ec_div\"><img style=\"float:left;\" src=\"../images/prostats/ps_cells.gif\" /><img style=\"float:left;margin-top:-178px;margin-left:-28px;\" src=\"../images/prostats/ps_cells.gif\" /></div>",
+		'optionscode'	=> $extra_cells,
+		'value'			=> ps_SetSettingsValue('ps_cell_1', '4'),
+		'disporder'		=> 62,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_cell_2",
-		"title"			=> "Extra cell 2 (Bottom-Left)",
-		"description"	=> "<div class=\"ec_div\"><img style=\"float:left;\" src=\"../images/prostats/ps_cells.gif\" /><img style=\"float:left;margin-top:-159px;margin-left:-28px;\" src=\"../images/prostats/ps_cells.gif\" /></div>",
-		"optionscode"	=> $extra_cells,
-		"value"			=> ps_SetSettingsValue('ps_cell_2', '2'),
-		"disporder"		=> '64',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_cell_2",
+		'title'			=> "Extra cell 2 (Bottom-Left)",
+		'description'	=> "<div class=\"ec_div\"><img style=\"float:left;\" src=\"../images/prostats/ps_cells.gif\" /><img style=\"float:left;margin-top:-159px;margin-left:-28px;\" src=\"../images/prostats/ps_cells.gif\" /></div>",
+		'optionscode'	=> $extra_cells,
+		'value'			=> ps_SetSettingsValue('ps_cell_2', '2'),
+		'disporder'		=> 64,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_cell_3",
-		"title"			=> "Extra cell 3 (Top-Middle)",
-		"description"	=> "<div class=\"ec_div\"><img style=\"float:left;\" src=\"../images/prostats/ps_cells.gif\" /><img style=\"float:left;margin-top:-178px;margin-left:-14px;\" src=\"../images/prostats/ps_cells.gif\" /></div>",
-		"optionscode"	=> $extra_cells,
-		"value"			=> ps_SetSettingsValue('ps_cell_3', '1'),
-		"disporder"		=> '66',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_cell_3",
+		'title'			=> "Extra cell 3 (Top-Middle)",
+		'description'	=> "<div class=\"ec_div\"><img style=\"float:left;\" src=\"../images/prostats/ps_cells.gif\" /><img style=\"float:left;margin-top:-178px;margin-left:-14px;\" src=\"../images/prostats/ps_cells.gif\" /></div>",
+		'optionscode'	=> $extra_cells,
+		'value'			=> ps_SetSettingsValue('ps_cell_3', '1'),
+		'disporder'		=> 66,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_cell_4",
-		"title"			=> "Extra cell 4 (Bottom-Middle)",
-		"description"	=> "<div class=\"ec_div\"><img style=\"float:left;\" src=\"../images/prostats/ps_cells.gif\" /><img style=\"float:left;margin-top:-159px;margin-left:-14px;\" src=\"../images/prostats/ps_cells.gif\" /></div>",
-		"optionscode"	=> $extra_cells,
-		"value"			=> ps_SetSettingsValue('ps_cell_4', '7'),
-		"disporder"		=> '68',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_cell_4",
+		'title'			=> "Extra cell 4 (Bottom-Middle)",
+		'description'	=> "<div class=\"ec_div\"><img style=\"float:left;\" src=\"../images/prostats/ps_cells.gif\" /><img style=\"float:left;margin-top:-159px;margin-left:-14px;\" src=\"../images/prostats/ps_cells.gif\" /></div>",
+		'optionscode'	=> $extra_cells,
+		'value'			=> ps_SetSettingsValue('ps_cell_4', '7'),
+		'disporder'		=> 68,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_cell_5",
-		"title"			=> "Extra cell 5 (Top-Right)",
-		"description"	=> "<div class=\"ec_div\"><img style=\"float:left;\" src=\"../images/prostats/ps_cells.gif\" /><img style=\"float:left;margin-top:-178px;margin-left:0px;\" src=\"../images/prostats/ps_cells.gif\" /></div>",
-		"optionscode"	=> $extra_cells,
-		"value"			=> ps_SetSettingsValue('ps_cell_5', '3'),
-		"disporder"		=> '70',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_cell_5",
+		'title'			=> "Extra cell 5 (Top-Right)",
+		'description'	=> "<div class=\"ec_div\"><img style=\"float:left;\" src=\"../images/prostats/ps_cells.gif\" /><img style=\"float:left;margin-top:-178px;margin-left:0px;\" src=\"../images/prostats/ps_cells.gif\" /></div>",
+		'optionscode'	=> $extra_cells,
+		'value'			=> ps_SetSettingsValue('ps_cell_5', '3'),
+		'disporder'		=> 70,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_cell_6",
-		"title"			=> "Extra cell 6 (Bottom-Right)",
-		"description"	=> "<div class=\"ec_div\"><img style=\"float:left;\" src=\"../images/prostats/ps_cells.gif\" /><img style=\"float:left;margin-top:-159px;margin-left:0px;\" src=\"../images/prostats/ps_cells.gif\" /></div>",
-		"optionscode"	=> $extra_cells,
-		"value"			=> ps_SetSettingsValue('ps_cell_6', '5'),
-		"disporder"		=> '72',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_cell_6",
+		'title'			=> "Extra cell 6 (Bottom-Right)",
+		'description'	=> "<div class=\"ec_div\"><img style=\"float:left;\" src=\"../images/prostats/ps_cells.gif\" /><img style=\"float:left;margin-top:-159px;margin-left:0px;\" src=\"../images/prostats/ps_cells.gif\" /></div>",
+		'optionscode'	=> $extra_cells,
+		'value'			=> ps_SetSettingsValue('ps_cell_6', '5'),
+		'disporder'		=> 72,
+		'gid'			=> $gid
 	);
 
 	$ps[]= array(
-		"name"			=> "ps_xml_feed",
-		"title"			=> "Activate XML feed",
-		"description"	=> "Output the stats in XML format to show on other websites. [<a href=\"http://community.mybb.com/thread-48686.html\" target=\"_blank\">More Information</a>]",
-		"optionscode"	=> "yesno",
-		"value"			=> ps_SetSettingsValue('ps_xml_feed', '0'),
-		"disporder"		=> '78',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_xml_feed",
+		'title'			=> "Activate XML feed",
+		'description'	=> "Output the stats in XML format to show on other websites. [<a href=\"http://community.mybb.com/thread-48686.html\" target=\"_blank\">More Information</a>]",
+		'optionscode'	=> "yesno",
+		'value'			=> ps_SetSettingsValue('ps_xml_feed', '0'),
+		'disporder'		=> 78,
+		'gid'			=> $gid
 	);
 	
 	$ps[]= array(
-		"name"			=> "ps_version",
-		"title"			=> "ProStats Version",
-		"description"	=> "DO NOT MODIFY THIS SETTING",
-		"optionscode"	=> "text",
-		"value"			=> '1.9.1',
-		"disporder"		=> '78',
-		"gid"			=> intval($gid),
+		'name'			=> "ps_chkupdates",
+		'title'			=> "Check for updates",
+		'description'	=> "Turn this setting On and you\'ll be notified whenever a new version released. Notification will be shown above the ProStats\' table and would be visible only to Admins.",
+		'optionscode'	=> "yesno",
+		'value'			=> ps_SetSettingsValue('ps_chkupdates', '1'),
+		'disporder'		=> 80,
+		'gid'			=> $gid
+	);
+	
+	$ps[]= array(
+		'name'			=> "ps_version",
+		'title'			=> "ProStats Version",
+		'description'	=> "DO NOT MODIFY THIS SETTING",
+		'optionscode'	=> "text",
+		'value'			=> '1.9.2',
+		'disporder'		=> 90,
+		'gid'			=> $gid
 	);
 		
 	foreach ($ps as $p)
@@ -470,6 +480,8 @@ function prostats_activate()
 {
 	global $db;
 	
+	prostats_deactivate();
+	
 	require_once MYBB_ROOT.'inc/adminfunctions_templates.php';
 	find_replace_templatesets('index', '#{\$header}(\r?)\n#', "{\$header}\n{\$ps_header_index}\n");
 	find_replace_templatesets('index', '#{\$forums}(\r?)\n#', "{\$forums}\n{\$ps_footer_index}\n");
@@ -479,8 +491,8 @@ function prostats_activate()
 	$extra_cells = "select\n0=--\n1=Most replies\n2=Most reputations\n3=Most thanks\n4=Most viewed\n5=New members\n6=Top downloads\n7=Top posters\n8=Top referrers";
 
 	$templatearray = array(
-		"title" => "prostats",
-		"template" => "
+		'title' => "prostats",
+		'template' => "
 <script type=\"text/javascript\">
 <!--
 
@@ -490,7 +502,7 @@ function prostats_reload()
 {
 	if(spinner){return false;}
 	this.spinner = new ActivityIndicator(\"body\", {image: \"images/spinner_big.gif\"});
-	new Ajax.Request(\'xmlhttp.php?action=prostats_reload&my_post_key=\'+my_post_key, {method: \'post\',postBody:\"\", onComplete:prostats_done});
+	new Ajax.Request(\'{\$mybb->settings[\'bburl\']}/xmlhttp.php?action=prostats_reload&my_post_key=\'+my_post_key, {method: \'post\',postBody:\"\", onComplete:prostats_done});
 	return false;
 }
 
@@ -514,7 +526,8 @@ function prostats_done(request)
 -->
 </script>
 
-		<div id=\"prostats_table\">		
+		<div id=\"prostats_table\">
+		{\$remote_msg}
 		<table width=\"100%\" border=\"0\" cellspacing=\"{\$theme[borderwidth]}\" cellpadding=\"0\" class=\"tborder\">
 		<thead>
 		<tr><td colspan=\"{\$num_columns}\">
@@ -537,20 +550,20 @@ function prostats_done(request)
 		</table>
 		<br />
 		</div>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	$templatearray = array(
-		"title" => "prostats_readstate_icon",
-		"template" => "<img src=\"{\$mybb->settings[\'bburl\']}/images/prostats/ps_mini{\$lightbulb[\'folder\']}.gif\" style=\"vertical-align:middle;\" alt=\"\" />&nbsp;",
-		"sid" => "-1",
+		'title' => "prostats_readstate_icon",
+		'template' => "<img src=\"{\$mybb->settings[\'bburl\']}/images/prostats/ps_mini{\$lightbulb[\'folder\']}.gif\" style=\"vertical-align:middle;\" alt=\"\" />&nbsp;",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	$templatearray = array(
-		"title" => "prostats_newestposts",
-		"template" => "<td class=\"{\$trow}\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
+		'title' => "prostats_newestposts",
+		'template' => "<td class=\"{\$trow}\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
 		<td colspan=\"{\$colspan}\">{\$lang->prostats_latest_posts}</td>
 		</tr>
@@ -564,30 +577,30 @@ function prostats_done(request)
 </table></td>
 		</tr>
 		</table></td>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	$templatearray = array(
-		"title" => "prostats_newestposts_row",
-		"template" => "<tr class=\"{\$trow} smalltext\" style=\"{\$highlight}\">
+		'title' => "prostats_newestposts_row",
+		'template' => "<tr class=\"{\$trow} smalltext\" style=\"{\$highlight}\">
 		{\$newestposts_cols}
 		</tr>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	$templatearray = array(
-		"title" => "prostats_newestposts_specialchar",
-		"template" => "<a href=\"{\$threadlink}\" style=\"text-decoration: none;\"><font face=\"arial\" style=\"line-height:10px;\">▼</font></a>",
-		"sid" => "-1",
+		'title' => "prostats_newestposts_specialchar",
+		'template' => "<a href=\"{\$threadlink}\" style=\"text-decoration: none;\"><font face=\"arial\" style=\"line-height:10px;\">▼</font></a>",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	//Most Replies
 	$templatearray = array(
-		"title" => "prostats_mostreplies",
-		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
+		'title' => "prostats_mostreplies",
+		'template' => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
 		<td colspan=\"2\">{\$lang->prostats_most_replies}</td>
 		</tr>
@@ -596,24 +609,24 @@ function prostats_done(request)
 		{\$mostreplies_row}
 </table></td></tr>
 		</table></td>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"title" => "prostats_mostreplies_row",
-		"template" => "<tr class=\"smalltext\" style=\"{\$highlight}\">
+		'title' => "prostats_mostreplies_row",
+		'template' => "<tr class=\"smalltext\" style=\"{\$highlight}\">
 		<td>{\$readstate_icon}<a href=\"{\$threadlink}\" title=\"{\$subject_long}\">{\$subject}</a></td>
 		<td align=\"{\$ps_align}\"><a href=\"javascript:MyBB.whoPosted({\$tid});\">{\$replies}</a></td>
 		</tr>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	//Most Reputation
 	$templatearray = array(
-		"title" => "prostats_mostreputation",
-		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
+		'title' => "prostats_mostreputation",
+		'template' => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
 		<td colspan=\"2\">{\$lang->prostats_most_reputations}</td>
 		</tr>
@@ -622,24 +635,24 @@ function prostats_done(request)
 		{\$mostreputation_row}
 </table></td></tr>
 		</table></td>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"title" => "prostats_mostreputation_row",
-		"template" => "<tr class=\"smalltext\">
+		'title' => "prostats_mostreputation_row",
+		'template' => "<tr class=\"smalltext\">
 		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
 		<td align=\"{\$ps_align}\"><a href=\"reputation.php?uid={\$uid}\">{\$repscount}</a></td>
 		</tr>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	//Most Thanks
 	$templatearray = array(
-		"title" => "prostats_mostthanks",
-		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
+		'title' => "prostats_mostthanks",
+		'template' => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
 		<td colspan=\"2\">{\$lang->prostats_most_thanks}</td>
 		</tr>
@@ -648,24 +661,24 @@ function prostats_done(request)
 		{\$mostthanks_row}
 </table></td></tr>
 		</table></td>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"title" => "prostats_mostthanks_row",
-		"template" => "<tr class=\"smalltext\">
+		'title' => "prostats_mostthanks_row",
+		'template' => "<tr class=\"smalltext\">
 		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
 		<td align=\"{\$ps_align}\">{\$thxnum}</td>
 		</tr>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	//Most Views
 	$templatearray = array(
-		"title" => "prostats_mostviews",
-		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
+		'title' => "prostats_mostviews",
+		'template' => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
 		<td colspan=\"2\">{\$lang->prostats_most_views}</td>
 		</tr>
@@ -674,24 +687,24 @@ function prostats_done(request)
 		{\$mostviews_row}
 </table></td></tr>
 		</table></td>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"title" => "prostats_mostviews_row",
-		"template" => "<tr class=\"smalltext\" style=\"{\$highlight}\">
+		'title' => "prostats_mostviews_row",
+		'template' => "<tr class=\"smalltext\" style=\"{\$highlight}\">
 		<td>{\$readstate_icon}<a href=\"{\$threadlink}\" title=\"{\$subject_long}\">{\$subject}</a></td>
 		<td align=\"{\$ps_align}\">{\$views}</td>
 		</tr>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	//Newest Members
 	$templatearray = array(
-		"title" => "prostats_newmembers",
-		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
+		'title' => "prostats_newmembers",
+		'template' => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
 		<td colspan=\"2\">{\$lang->prostats_newest_members}</td>
 		</tr>
@@ -700,24 +713,24 @@ function prostats_done(request)
 		{\$newmembers_row}
 </table></td></tr>
 		</table></td>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"title" => "prostats_newmembers_row",
-		"template" => "<tr class=\"smalltext\">
+		'title' => "prostats_newmembers_row",
+		'template' => "<tr class=\"smalltext\">
 		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
 		<td align=\"{\$ps_align}\">{\$regdate}</td>
 		</tr>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	//Top Downloads
 	$templatearray = array(
-		"title" => "prostats_topdownloads",
-		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
+		'title' => "prostats_topdownloads",
+		'template' => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
 		<td colspan=\"2\">{\$lang->prostats_top_downloads}</td>
 		</tr>
@@ -726,24 +739,24 @@ function prostats_done(request)
 		{\$topdownloads_row}
 </table></td></tr>
 		</table></td>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"title" => "prostats_topdownloads_row",
-		"template" => "<tr class=\"smalltext\" style=\"{\$highlight}\">
+		'title' => "prostats_topdownloads_row",
+		'template' => "<tr class=\"smalltext\" style=\"{\$highlight}\">
 		<td><img src=\"{\$attach_icon}\" width=\"11\" height=\"11\" align=\"absmiddle\" alt=\"\" />&nbsp;<a href=\"{\$postlink}\" title=\"{\$subject_long}\">{\$subject}</a></td>
 		<td align=\"{\$ps_align}\">{\$downloadnum}</td>
 		</tr>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	//Top Posters
 	$templatearray = array(
-		"title" => "prostats_topposters",
-		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
+		'title' => "prostats_topposters",
+		'template' => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
 		<td colspan=\"2\">{\$lang->prostats_top_posters}</td>
 		</tr>
@@ -752,24 +765,24 @@ function prostats_done(request)
 		{\$topposters_row}
 </table></td></tr>
 		</table></td>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"title" => "prostats_topposters_row",
-		"template" => "<tr class=\"smalltext\">
+		'title' => "prostats_topposters_row",
+		'template' => "<tr class=\"smalltext\">
 		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
 		<td align=\"{\$ps_align}\"><a href=\"search.php?action=finduser&amp;uid={\$uid}\">{\$postnum}</a></td>
 		</tr>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	//Top Referrers
 	$templatearray = array(
-		"title" => "prostats_topreferrers",
-		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
+		'title' => "prostats_topreferrers",
+		'template' => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
 		<td colspan=\"2\">{\$lang->prostats_top_topreferrers}</td>
 		</tr>
@@ -778,24 +791,23 @@ function prostats_done(request)
 		{\$topreferrers_row}
 </table></td></tr>
 		</table></td>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"title" => "prostats_topreferrers_row",
-		"template" => "<tr class=\"smalltext\">
+		'title' => "prostats_topreferrers_row",
+		'template' => "<tr class=\"smalltext\">
 		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
 		<td align=\"{\$ps_align}\">{\$refnum}</td>
 		</tr>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
-	
 	$templatearray = array(
-		"title" => "prostats_message",
-		"template" => "<tr class=\"trow1\">
+		'title' => "prostats_message",
+		'template' => "<tr class=\"trow1\">
 		<td colspan=\"{\$num_columns}\">
 		<table  border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\" width=\"100%\">
 		<tr class=\"smalltext\">
@@ -806,21 +818,21 @@ function prostats_done(request)
 		</table>
 		</td>
 		</tr>",
-		"sid" => "-1",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	$templatearray = array(
-		"title" => "prostats_onerowextra",
-		"template" => "<td class=\"{\$trow}\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\"><tr>{\$single_extra_content}</tr></table></td>",
-		"sid" => "-1",
+		'title' => "prostats_onerowextra",
+		'template' => "<td class=\"{\$trow}\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\"><tr>{\$single_extra_content}</tr></table></td>",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 	
 	$templatearray = array(
-		"title" => "prostats_tworowextra",
-		"template" => "<td class=\"{\$trow}\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\"><tr>{\$extra_content_one}</tr><tr>{\$extra_content_two}</tr></table></td>",
-		"sid" => "-1",
+		'title' => "prostats_tworowextra",
+		'template' => "<td class=\"{\$trow}\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\"><tr>{\$extra_content_one}</tr><tr>{\$extra_content_two}</tr></table></td>",
+		'sid' => "-1"
 		);
 	$db->insert_query("templates", $templatearray);
 }
@@ -830,7 +842,7 @@ function prostats_uninstall()
 {
 	global $mybb, $db;
 	
-	$db->delete_query("settings", "name IN ('ps_enable','ps_ignoreforums','ps_index','ps_portal','ps_position','ps_format_name','ps_highlight','ps_subject_length','ps_num_rows','ps_date_format','ps_date_format_ty','ps_trow_message','ps_trow_message_pos','ps_latest_posts','ps_latest_posts_prefix','ps_latest_posts_cells','ps_latest_posts_pos','ps_cell_1','ps_cell_2','ps_cell_3','ps_cell_4','ps_cell_5','ps_cell_6','ps_hidefrombots','ps_global_tag','ps_xml_feed','ps_version')");
+	$db->delete_query("settings", "name IN ('ps_enable','ps_ignoreforums','ps_index','ps_portal','ps_position','ps_format_name','ps_highlight','ps_subject_length','ps_num_rows','ps_date_format','ps_date_format_ty','ps_trow_message','ps_trow_message_pos','ps_latest_posts','ps_latest_posts_prefix','ps_latest_posts_cells','ps_latest_posts_pos','ps_cell_1','ps_cell_2','ps_cell_3','ps_cell_4','ps_cell_5','ps_cell_6','ps_hidefrombots','ps_global_tag','ps_xml_feed','ps_chkupdates','ps_version')");
 	$db->delete_query("settinggroups", "name='prostats'");
 	
 	rebuild_settings();
@@ -845,7 +857,7 @@ function prostats_install_redirect()
 		global $message;
 	
 		flash_message($message, 'success');
-		admin_redirect("index.php?module=config-settings&action=change&gid=".intval($mybb->prostats_insert_gid));
+		admin_redirect("index.php?module=config-settings&action=change&gid=".$mybb->prostats_insert_gid);
 	}
 }
 
@@ -1530,7 +1542,7 @@ function ps_MakeTable()
 	global $mybb, $db, $theme, $lang, $templates, $parser, $unviewables, $vcheck, $under_mod_forums_arr, $lightbulb, $unread_forums, $ps_align;
 	$lang->load("prostats");
 	
-	$right_cols = $left_cols = $middle_cols = $extra_content = $extra_content_1_2 = $extra_content_3_4 = $extra_content_5_6 = "";
+	$right_cols = $left_cols = $middle_cols = $extra_content = $extra_content_1_2 = $extra_content_3_4 = $extra_content_5_6 = $remote_msg = "";
 	$num_columns = 0;
 	
 	$ps_align = $lang->settings['rtl'] ? "right" : "left";
@@ -1672,6 +1684,11 @@ function ps_MakeTable()
 		{
 			eval("\$trow_message_down = \"".$templates->get("prostats_message")."\";");
 		}
+	}
+	
+	if ($mybb->settings['ps_chkupdates'] && $mybb->user['uid'] && $mybb->usergroup['cancp'])
+	{
+		$remote_msg = '<a href="http://prostats.wordpress.com/"><img alt="" src="http://mybb.cc/prostats/chk_update.php?v='.$mybb->settings['ps_version'].'" /></a>';
 	}
 	
 	eval("\$prostats = \"".$templates->get("prostats")."\";");
