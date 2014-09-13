@@ -2,11 +2,12 @@
 /*
  _______________________________________________________
 |                                                       |
-| Name: FloatStats 1.2.1                                |
+| Name: FloatStats 1.2.2                                |
 | Type: MyBB Plugin's additional script                 |
 | Author: SaeedGh (SaeehGhMail@Gmail.com)               |
+| Author 2: AliReza Tofighi (http://my-bb.ir)           |
 | Support: http://prostats.wordpress.com/support/       |
-| Last edit: December 24th, 2012                        |
+| Last edit: September 2nd, 2014                        |
 |_______________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -77,6 +78,8 @@ if ($_POST && is_array($_POST) && count($_POST))
 	}
 }
 
+require_once MYBB_ROOT."inc/functions.php";
+
 // Connect to Database
 require_once MYBB_ROOT."inc/db_".$config['database']['type'].".php";
 
@@ -101,8 +104,6 @@ define("TABLE_PREFIX", $config['database']['table_prefix']);
 $db->connect($config['database']);
 $db->set_table_prefix(TABLE_PREFIX);
 $db->type = $config['database']['type'];
-
-require_once MYBB_ROOT."inc/functions.php";
 
 // get uset data
 $udata = get_user($target['uid']);
@@ -175,6 +176,12 @@ if ($_GET['fs_action'] == 'preview')
 			<ProStats>
 		</div>
 	</div>
+<script>
+/* overriding the original reload function */
+prostats_reload = function(str) {
+	parent.fs_refresh();
+}
+</script>
 </body>
 </html>';
 	$plugins->run_hooks('pre_output_page');
@@ -245,60 +252,6 @@ function fs_js()
 
 var ScriptTag="<script>";
 
-var BrowserDetect = {
-	init: function () {
-		this.browser = this.searchString(this.dataBrowser) || "An unknown browser";
-		this.version = this.searchVersion(navigator.userAgent)
-			|| this.searchVersion(navigator.appVersion)
-			|| "an unknown version";
-	},
-	searchString: function (data) {
-		for (var i=0;i<data.length;i++)	{
-			var dataString = data[i].string;
-			var dataProp = data[i].prop;
-			this.versionSearchString = data[i].versionSearch || data[i].identity;
-			if (dataString) {
-				if (dataString.indexOf(data[i].subString) != -1)
-					return data[i].identity;
-			}
-			else if (dataProp)
-				return data[i].identity;
-		}
-	},
-	searchVersion: function (dataString) {
-		var index = dataString.indexOf(this.versionSearchString);
-		if (index == -1) return;
-		return parseFloat(dataString.substring(index+this.versionSearchString.length+1));
-	},
-	dataBrowser: [
-		{
-			string: navigator.userAgent,
-			subString: "Chrome",
-			identity: "Chrome"
-		},
-		{
-			prop: window.opera,
-			identity: "Opera"
-		},
-		{
-			string: navigator.userAgent,
-			subString: "Firefox",
-			identity: "Firefox"
-		}
-	]
-};
-BrowserDetect.init();
-
-if (BrowserDetect.browser != 'Firefox' && BrowserDetect.browser != 'Opera'){
-	var r = confirm("[ProStats ACP]: Some features may not work properly in your web-browser. Would you like to try them anyway?");
-	if (r != true)
-	{
-		var alertMsg = '<div class="error" id="flash_message">Two advanced features of ProStats ("FloatStats" & "Instant Viewer") are disabled because your web-browser may not support them. Those features are tested in Firefox 17.0.1 and Opera 12.12.</div>';
-		Element.insert( $('inner'), {'top':alertMsg} );
-		process.exit(1);
-	}
-}
-
 <?php 
 	if ($mybb->user['uid'] && $mybb->usergroup['cancp'])
 	{
@@ -307,192 +260,138 @@ if (BrowserDetect.browser != 'Firefox' && BrowserDetect.browser != 'Opera'){
 		echo 'var cur_admin_id = "'.$mybb->user['uid'].'";';	
 ?>
 
-var welcomeDefTop = $("welcome").offsetTop;
+var welcomeDefTop = $("#welcome").offset().top;
 
-//http://www.cfchris.com/cfchris/index.cfm/2009/2/18/How-To-Prototype-Drag-Corner#cA119FCB3-3048-2ADC-12B442DEF96FC96F
-//Customized by SaeedGh
 function DragCorner(container, handle, iframe)
 {
-	var container = $(container);
-	var handle = $(handle);
-	var iframe = $(iframe);
+	var container = $('#'+container);
+	var handle = $('#'+handle);
+	var iframe = $('#'+iframe);
 	
-	container.moveposition = { x: 0, y: 0 };
-	
-	function moveListener(event) {
-		document.body.disableSelection();
-		
-		var moved = {
-			x: (event.pointerX() - container.moveposition.x),
-			y: (event.pointerY() - container.moveposition.y)
-		};
-	
-		container.moveposition = { x: event.pointerX(), y: event.pointerY() };
-		
-		function extractNumber(text) {
-			return +text.split(' ')[0].replace(/[^0-9]/g,'');
-		}
-		
-		var borderTop = extractNumber(container.getStyle('border-top-width'));
-		var borderBottom = extractNumber(container.getStyle('border-bottom-width'));
-		var paddingTop = extractNumber(container.getStyle('padding-top'));
-		var paddingBottom = extractNumber(container.getStyle('padding-bottom'));	
-		var heightAdjust = borderTop + borderBottom + paddingTop + paddingBottom;	
-		var size = container.getDimensions();
-		var viewport = document.viewport.getDimensions();
-		var bodyTop = document.body.getStyle("marginTop");
-		var welcomeTop = $("welcome").offsetTop;
-		
-		if (size.height + moved.y <= heightAdjust){
-			container.setStyle({
-				height: '0px',
-			});
-			document.body.setStyle({
-				marginTop: '0px',
-			});
-			$("welcome").setStyle({
-				top: welcomeDefTop + 'px',
-			});
-			handle.className = 'unselectable preview_handle_transition';
+	dragged = function(e)
+	{
+		container_new_height = e.clientY;
+		if(container_new_height < 50)
+		{
+			$(document).unbind('mousemove');
+			handle.attr('class', 'unselectable preview_handle_transition');
+			container.animate({'height': '0px'}, 100);
+			$('body').animate({'margin-top': '0px'}, 100);
 			window.setTimeout(function() {
-				handle.removeClassName('preview_handle_transition');
-				handle.addClassName('preview_handle');
+				handle.removeClass('preview_handle_transition');
+				handle.addClass('preview_handle');
 			}, 500);
-			document.body.enableSelection();
-			Event.stopObserving(document.body,'mousemove',moveListener);
-			handle.stopObserving('mousedown', mousedownListener);
-			handle.observe('mousedown', mousedownListener_jump);
-			$('preview_handle').setStyle('cursor: pointer;');
-			return false;
 		}
-		else if (size.height + moved.y - heightAdjust > viewport.height - 40) {
-			container.setStyle({
-				height: viewport.height - 40 + 'px',
-			});
-			document.body.setStyle({
-				marginTop: viewport.height - 40 + 'px',
-			});
-			$("welcome").setStyle({
-				top: viewport.height - 40 + welcomeDefTop + 'px',
-			});
-			handle.className = 'unselectable preview_handle_transition';
-			window.setTimeout(function() {
-				handle.removeClassName('preview_handle_transition');
-				handle.addClassName('preview_handle');
-			}, 500);
-			document.body.enableSelection();
-			Event.stopObserving(document.body,'mousemove',moveListener);
-			return false;
+		if(container_new_height > $(window).height()-40) {
+			container_new_height = $(window).height()-40;
 		}
+		container.css('height', container_new_height + 'px');
+		$('body').css('margin-top', container_new_height + 'px');
 		
-		container.setStyle({
-			height: size.height + moved.y - heightAdjust + 'px',
-			//width: size.width + moved.x - widthAdjust + 'px'
-		});
-		
-		document.body.setStyle({
-			marginTop: bodyTop.replace('px', '')-(-moved.y)+ 'px'
-		});
-		
-		$("welcome").setStyle({
-			top: welcomeTop-(-moved.y)+ 'px'
-		});
-		
-		document.body.enableSelection();
-	}
-	
-	function mousedownListener_jump(event) {
-		new PeriodicalExecuter(function(pe) {
-			if(container.offsetHeight > 200){
-				pe.stop();
-			} else {
-				container.setStyle({
-					height: container.offsetHeight + 30 - 1 + 'px', //border-bottom: 1
-				});
-				document.body.setStyle({
-					marginTop: document.body.getStyle("marginTop").replace('px', '') - (-30) + 'px',
-				});
-				
-				$("welcome").setStyle({
-					top: $("welcome").offsetTop + 30 + 'px',
-				});
+	};
+
+	$(document).bind('mousedown', function(e){
+		if($(e.target).closest(handle).length == 1 && e.clientY >= 30)
+		{
+			$(document).bind('mousemove', dragged);
+			$(document).disableSelection();
+			iframe.css('visibility', 'hidden');
+			container_new_height = (e.clientY);
+			if(container_new_height < 0) {
+				container_new_height = 0;
 			}
-		}, 0.01);
-		handle.stopObserving('mousedown', mousedownListener_jump);
-		handle.observe('mousedown', mousedownListener);
-		$('preview_handle').setStyle('cursor: s-resize;');
-	}
-	
-	function mousedownListener(event) {
-		container.moveposition = {x:event.pointerX(),y:event.pointerY()};
-		Event.observe(document.body,'mousemove',moveListener);
-		iframe.setStyle('visibility: hidden;');	
-	}
-	
-	handle.observe('mousedown', mousedownListener_jump);
-
-	Event.observe(document.body,'mouseup', function(event) {
-		Event.stopObserving(document.body,'mousemove',moveListener);
-		iframe.setStyle('visibility: visible;');
+			if(container_new_height > $(window).height()-40) {
+				container_new_height = $(window).height()-40;
+			}
+			container.animate({'height': container_new_height + 'px'}, 100);
+			$('body').animate({'margin-top': container_new_height + 'px'}, 100);
+		}
 	});
-}
-
-Element.prototype.disableSelection = function(){
-    this.onselectstart = function() {
-        return false;
-    };
-    this.unselectable = "on";
-    this.style.MozUserSelect = "none";
-	return this;
+	$(document).bind('mouseup', function(e){
+		$(document).unbind('mousemove');
+		$(document).enableSelection();
+		iframe.css('visibility', 'visible');
+	});
+	
+	handle.mousedown(function(e)
+	{
+		if(e.clientY < 30)
+		{
+			container.animate({'height': '300px'}, 'fast');
+			$('body').animate({'margin-top': '300px'}, 'fast');
+		}
+	});
+	handle.hover(function()
+	{
+		if(container.height() == 0) {
+			$(this).css('cursor', 'pointer');
+		} else {
+			$(this).css('cursor', 's-resize');
+		}
+	});
 };
 
-Element.prototype.enableSelection = function(){
-    this.onselectstart = function() {
-        return false;
-    };
-    this.unselectable = "none";
-    this.style.MozUserSelect = "text";
-	return this;
-};
-
-var spinner=null;
-$("float_notification").setStyle({display:"block"});
-$("preview_iframe_holder").setStyle({display:"block"});
-$("preview_handle").setStyle({display:"block"});
-$("fs_auto_refresh_chk").checked = true;
-$("fs_uid").value = cur_admin_id;
-$("fs_script").value = "index.php";
-$("fs_key").value = "tid";
-$("fs_value").value = "";
+var spinner = false;
+$("#float_notification").css({display:"block"});
+$("#preview_iframe_holder").css({display:"block"});
+$("#preview_iframe_holder").append('<div id="preview_iframe_spinner"><img src="../images/spinner_big.gif" alt="spinner" /></div>');
+$("#preview_handle").css({display:"block"});
+$("#fs_auto_refresh_chk").attr('checked',true);
+$("#fs_uid").val(cur_admin_id);
+$("#fs_script").val("index.php");
+$("#fs_key").val("tid");
+$("#fs_value").val("");
 
 function fs_refresh()
 {
-	if(spinner)
+	if(spinner) {
 		return false;
-	spinner = new ActivityIndicator("body", {image: "../images/spinner_big.gif"});
+	}
+	
+	spinner = $('#preview_iframe_spinner').css('height', $('#preview_iframe_holder').height()+'px').show();
 	var fs_postbody = "";
 	
-	settings_options.each(function(sname) {
-		$("setting_"+sname+"_yes").checked ? chkstats=1 : chkstats=0;
+	$.each(settings_options, function(index, sname) {
+		$("#setting_"+sname+"_yes").prop('checked') ? chkstats=1 : chkstats=0;
 		fs_postbody += sname+"="+chkstats+"&";
 	});
 
-	settings_text.each(function(sname) {
-		fs_postbody += sname+"="+$("setting_"+sname).value+"&";
+	$.each(settings_text, function(index, sname) {
+		fs_postbody += sname+"="+$("#setting_"+sname).val()+"&";
 	});
 	
-	settings_select.each(function(sname) {
-		fs_postbody += sname+"="+$("setting_"+sname).value+"&";
+	$.each(settings_select, function(index, sname) {
+		fs_postbody += sname+"="+$("#setting_"+sname).val()+"&";
 	});
 	
-	new Ajax.Request("../floatstats.php?fs_action=preview&hash="+hashcode+"&t_script="+$("fs_script").value+"&t_uid="+$("fs_uid").value+"&t_key="+$("fs_key").value+"&t_value="+$("fs_value").value, {method: "post", postBody:fs_postbody, onComplete: fs_do_preview});
+	$.each(settings_selectforums, function(index, sname) {
+		var selforum = $(':radio[name="upsetting['+sname+']"]:checked', '#change').val();
+		if (selforum == 'custom')
+		{
+			selforum = $('#setting_'+sname).val();
+		}
+		fs_postbody += sname+"="+selforum+"&";
+	});
 	
-	new Ajax.Request("../floatstats.php?hash="+hashcode+"&t_script="+$("fs_script").value+"&t_uid="+$("fs_uid").value+"&t_key="+$("fs_key").value+"&t_value="+$("fs_value").value, {method: "post", postBody:fs_postbody, onComplete: fs_do_refresh});
+	$.ajax({
+		url: "../floatstats.php?fs_action=preview&hash="+hashcode+"&t_script="+$("#fs_script").val()+"&t_uid="+$("#fs_uid").val()+"&t_key="+$("#fs_key").val()+"&t_value="+$("#fs_value").val(),
+		type: 'POST',
+		data: fs_postbody,
+		success: fs_do_preview
+	});
+	
+	$.ajax({
+		url: "../floatstats.php?hash="+hashcode+"&t_script="+$("#fs_script").val()+"&t_uid="+$("#fs_uid").val()+"&t_key="+$("#fs_key").val()+"&t_value="+$("#fs_value").val(),
+		type: 'POST',
+		data: fs_postbody,
+		dataType: 'XML',
+		success: fs_do_refresh
+	});
 }
 
-function fs_do_preview(response)
+function fs_do_preview(data)
 {
-	iframe = $("preview_iframe");
+	iframe = $("#preview_iframe")[0];
 	//Martin Honnen <mahotrash@yahoo.de> 
 	var iframeDoc;
 	if (iframe.contentDocument) {
@@ -506,23 +405,27 @@ function fs_do_preview(response)
 	}
 	if (iframeDoc) {
 		iframeDoc.open();
-		iframeDoc.write(response.responseText);
+		iframeDoc.write(data);
 		iframeDoc.close();
 	}
+
+	if(spinner) {
+		spinner.hide();
+	}
+	spinner = false;
+
 	return false;
 }
 
-function fs_do_refresh(response)
+function fs_do_refresh(xml)
 {
 	try
 	{
-		xml=response.responseXML;
 		var db_queries = xml.getElementsByTagName("DatabaseQueries").item(0).firstChild.data;
 		var mem_usage = xml.getElementsByTagName("MemoryUsage").item(0).firstChild.data;
-		
 		if (db_queries) {
-			$("fs_queries_count").innerHTML = db_queries;
-			$("fs_mem_usage").innerHTML = mem_usage;
+			$("#fs_queries_count").html(db_queries);
+			$("#fs_mem_usage").html(mem_usage);
 		}
 		else 
 		{
@@ -535,23 +438,25 @@ function fs_do_refresh(response)
 	}
 	finally
 	{
-		spinner.destroy();
-		spinner=null;
-		return lin;
+		if(spinner) {
+			spinner.hide();
+		}
+		spinner = false;
+		return false;
 	}
 }
 
 function toggle_float_note()
 {
-	if($("close_float_note").innerHTML != "^"){
-		$("close_float_note").innerHTML = "^";
-		$("float_notification").setStyle({
+	if($("#close_float_note").html() != "^"){
+		$("#close_float_note").html("^");
+		$("#float_notification").css({
 			left: "-181px",
 			bottom: "-196px"
 		});
 	}else{
-		$("close_float_note").innerHTML = "×";
-		$("float_notification").setStyle({
+		$("#close_float_note").html("×");
+		$("#float_notification").css({
 			left: "0px",
 			bottom: "0px"
 		});
@@ -559,21 +464,28 @@ function toggle_float_note()
 }
 
 function fs_autoupdate(){
-	if ($("fs_auto_refresh_chk").checked){
+	if ($("#fs_auto_refresh_chk").prop('checked')){
 		fs_refresh();
 	}
 }
 
-document.observe('dom:loaded', function() {
-	settings_options.each(function(sname) {
-		$("change").getInputs("radio", "upsetting["+sname+"]").each(function(el){el.onclick = fs_autoupdate;});
+$(document).ready(function() {
+	$.each(settings_options, function(index, sname) {
+		$(':radio[name="upsetting['+sname+']"]', '#change').click(fs_autoupdate);
 	});
-	settings_text.each(function(sname) {
-		$("setting_"+sname).onblur = fs_autoupdate;
+	$.each(settings_text, function(index, sname) {
+		$("#setting_"+sname).blur(fs_autoupdate);
 	});
-	settings_select.each(function(sname) {
-		$("setting_"+sname).onchange = fs_autoupdate;
+
+	$.each(settings_select, function(index, sname) {
+		$("#setting_"+sname).change(fs_autoupdate);
 	});
+	
+	$.each(settings_selectforums, function(index, sname) {
+		$(':radio[name="upsetting['+sname+']"]', '#change').click(fs_autoupdate);
+		$('#setting_'+sname).change(fs_autoupdate);
+	});
+	
 	fs_refresh();
 	DragCorner('preview_iframe_holder','preview_handle','preview_iframe');
 }); 
@@ -582,7 +494,7 @@ document.observe('dom:loaded', function() {
 	} else {
 ?>
 	var alertMsg = '<div class="error" id="flash_message">Two advanced features of ProStats ("FloatStats" & "Instant Viewer") are disabled because you are only logged in AdminCP, not in your Forum! In order to active those features, please log in your forum as current user and then come back and refresh this page.</div>';
-	Element.insert( $('inner'), {'top':alertMsg} );
+	$('#inner').before(alertMsg);
 <?php 
 	}
 	exit;
@@ -606,7 +518,8 @@ function fs_css()
 	overflow:hidden;
 	border-top:1px solid #016BAE;
 	border-right:1px solid #016BAE;
-	background:url(./images/thead_bg.gif) repeat-x scroll left top #F1F1F1;
+	background:url(./images/thead.png) repeat-x scroll left top #F1F1F1;
+	background-size: 100% 25px;
 	font-size:x-small;
 	text-align:justify;
 	z-index:1000;
@@ -677,7 +590,27 @@ function fs_css()
 	height:0px;
 	background:#e5e5e5;
 	box-shadow:0px 2px 3px #999;
+	overflow: visible!important;
 }
+
+#preview_iframe_spinner {
+	position: absolute;
+	top: 0;
+	right: 0;
+	left: 0;
+	background: rgba(0, 0, 0, 0.5);
+	text-align: center;
+	padding: 0;
+	overflow: hidden;
+	height: 0;
+	box-sizing: border-box;
+	display: none;
+}
+
+#preview_iframe_spinner img {
+	margin: 25px;
+}
+
 .preview_handle, .preview_handle_transition {
 	display:none;
 	top:0;
