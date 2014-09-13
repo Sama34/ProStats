@@ -2,11 +2,11 @@
 /*
  _______________________________________________________
 |                                                       |
-| Name: ProStats 1.9.4                                  |
+| Name: ProStats 1.9.5                                  |
 | Type: MyBB Plugin                                     |
 | Author: SaeedGh (SaeehGhMail@Gmail.com)               |
 | Support: http://prostats.wordpress.com/support/       |
-| Last edit: December 02th, 2011                        |
+| Last edit: December 23th, 2012                        |
 |_______________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -24,10 +24,22 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 */
 
+
+function prostats_g()
+{
+	global $mybb;
+	
+	$mybb->psga['prostats_version'] = '1.9.5';
+	$mybb->psga['update_popup_link'] = 'https://docs.google.com/uc?export=view&id=0B1io8D4cQytcbzVQSWdHNFVJN3c';
+	$mybb->psga['surprise_link'] = 'https://docs.google.com/uc?export=view&id=0B1io8D4cQytcV0dPSTBYTTFNN00';
+}
+
+
 if (!defined("IN_MYBB"))
 {
 	die("Direct initialization of this file is not allowed.");
 }
+
 
 $plugins->add_hook('global_start', 'prostats_run_global');
 $plugins->add_hook('pre_output_page', 'prostats_run_pre_output');
@@ -50,6 +62,8 @@ function prostats_info()
 		$settings_link = '(<a href="index.php?module=config&action=change&search=prostats" style="color:#FF1493;">Settings</a>)';
 	}
 	
+	prostats_g();
+	
 	//DO NOT EDIT/TRANSLATE THIS SECTION
 	return array(
 		'name'			=>	'<img border="0" src="../images/prostats/prostats.gif" align="absbottom" /> ProStats <span style="color:#000;">/proʊˈstæts/</span>',
@@ -57,7 +71,7 @@ function prostats_info()
 		'website'		=>	'http://prostats.wordpress.com',
 		'author'		=>	'SaeedGh',
 		'authorsite'	=>	'mailto:SaeedGhMail@Gmail.com',
-		'version'		=>	'1.9.4', //*** ALSO IN THE SETTING "ps_version" ***
+		'version'		=>	$mybb->psga['prostats_version'], //*** ALSO IN THE SETTING "ps_version" ***
 		'guid'			=>	'124b68d05dcdaf6b7971050baddf340f',
 		'compatibility'	=>	'16*'
 	);
@@ -86,6 +100,8 @@ function prostats_install()
 	$extra_cells = "select\n0=--\n1=Most replies\n2=Most reputations\n3=Most thanks\n4=Most viewed\n5=New members\n6=Top downloads\n7=Top posters\n8=Top referrers";
 	
 	prostats_uninstall();
+	
+	prostats_g();
 	
 	$ps_group = array(
 		'name'			=> "prostats",
@@ -451,11 +467,21 @@ function prostats_install()
 	);
 	
 	$ps[]= array(
+		'name'			=> "ps_surprise",
+		'title'			=> "Surprise!",
+		'description'	=> "This option may add a little fun to your forum sometimes! It would probably happen once or twice a year and only Admins can see the result.",
+		'optionscode'	=> "yesno",
+		'value'			=> ps_SetSettingsValue('ps_surprise', '1'),
+		'disporder'		=> 85,
+		'gid'			=> $gid
+	);
+	
+	$ps[]= array(
 		'name'			=> "ps_version",
 		'title'			=> "ProStats Version",
 		'description'	=> "DO NOT MODIFY THIS SETTING",
 		'optionscode'	=> "text",
-		'value'			=> '1.9.4',
+		'value'			=> $mybb->psga['prostats_version'],
 		'disporder'		=> 90,
 		'gid'			=> $gid
 	);
@@ -526,7 +552,7 @@ function prostats_done(request)
 }
 -->
 </script>
-
+		
 		<div id=\"prostats_table\">
 		{\$remote_msg}
 		<table width=\"100%\" border=\"0\" cellspacing=\"{\$theme[borderwidth]}\" cellpadding=\"0\" class=\"tborder\">
@@ -843,7 +869,7 @@ function prostats_uninstall()
 {
 	global $mybb, $db;
 	
-	$db->delete_query("settings", "name IN ('ps_enable','ps_ignoreforums','ps_index','ps_portal','ps_position','ps_format_name','ps_highlight','ps_subject_length','ps_num_rows','ps_date_format','ps_date_format_ty','ps_trow_message','ps_trow_message_pos','ps_latest_posts','ps_latest_posts_prefix','ps_latest_posts_cells','ps_latest_posts_pos','ps_cell_1','ps_cell_2','ps_cell_3','ps_cell_4','ps_cell_5','ps_cell_6','ps_hidefrombots','ps_global_tag','ps_xml_feed','ps_chkupdates','ps_version')");
+	$db->delete_query("settings", "name IN ('ps_enable','ps_ignoreforums','ps_index','ps_portal','ps_position','ps_format_name','ps_highlight','ps_subject_length','ps_num_rows','ps_date_format','ps_date_format_ty','ps_trow_message','ps_trow_message_pos','ps_latest_posts','ps_latest_posts_prefix','ps_latest_posts_cells','ps_latest_posts_pos','ps_cell_1','ps_cell_2','ps_cell_3','ps_cell_4','ps_cell_5','ps_cell_6','ps_hidefrombots','ps_global_tag','ps_xml_feed','ps_chkupdates','ps_surprise','ps_version')");
 	$db->delete_query("settinggroups", "name='prostats'");
 	
 	rebuild_settings();
@@ -1691,11 +1717,18 @@ function ps_MakeTable()
 		}
 	}
 	
-	if ($mybb->settings['ps_chkupdates'] && $mybb->user['uid'] && $mybb->usergroup['cancp'])
+	if ($mybb->settings['ps_surprise'] && $mybb->user['uid'] && $mybb->usergroup['cancp'])
 	{
-		$remote_msg = '<a href="http://prostats.wordpress.com/"><img alt="" src="http://mybb.cc/prostats/chk_update.php?v='.$mybb->settings['ps_version'].'" /></a>';
+		prostats_g();
+		$remote_msg .= '<a href="http://prostats.wordpress.com/surprises/"><embed src="'.$mybb->psga['surprise_link'].'" type="image/svg+xml" /></a>';
 	}
 	
+	if ($mybb->settings['ps_chkupdates'] && $mybb->user['uid'] && $mybb->usergroup['cancp'])
+	{
+		prostats_g();
+		$remote_msg .= '<a href="http://prostats.wordpress.com/"><embed src="'.$mybb->psga['update_popup_link'].'" type="image/svg+xml" /></a>';
+	}
+		
 	eval("\$prostats = \"".$templates->get("prostats")."\";");
 	return $prostats;
 }

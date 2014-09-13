@@ -2,11 +2,11 @@
 /*
  _______________________________________________________
 |                                                       |
-| Name: FloatStats 1.2                                  |
+| Name: FloatStats 1.2.1                                |
 | Type: MyBB Plugin's additional script                 |
 | Author: SaeedGh (SaeehGhMail@Gmail.com)               |
 | Support: http://prostats.wordpress.com/support/       |
-| Last edit: August 5th, 2011                           |
+| Last edit: December 24th, 2012                        |
 |_______________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -31,6 +31,8 @@ if(!defined('MYBB_ROOT'))
 {
 	define('MYBB_ROOT', dirname(__FILE__)."/");
 }
+
+error_reporting(E_ALL & ~E_NOTICE);
 
 // generate the JavaScript codes
 if ($_GET['fs_action'] == 'js'){
@@ -288,9 +290,13 @@ var BrowserDetect = {
 BrowserDetect.init();
 
 if (BrowserDetect.browser != 'Firefox' && BrowserDetect.browser != 'Opera'){
-	var alertMsg = '<div class="error" id="flash_message">Two advanced features of ProStats ("FloatStats" & "Instant Viewer") are disabled because your web-browser doesn\'t support them. Those features are tested in Firefox 5 and Opera 11.5.</div>';
-	Element.insert( $('inner'), {'top':alertMsg} );
-	process.exit(1);
+	var r = confirm("[ProStats ACP]: Some features may not work properly in your web-browser. Would you like to try them anyway?");
+	if (r != true)
+	{
+		var alertMsg = '<div class="error" id="flash_message">Two advanced features of ProStats ("FloatStats" & "Instant Viewer") are disabled because your web-browser may not support them. Those features are tested in Firefox 17.0.1 and Opera 12.12.</div>';
+		Element.insert( $('inner'), {'top':alertMsg} );
+		process.exit(1);
+	}
 }
 
 <?php 
@@ -356,7 +362,7 @@ function DragCorner(container, handle, iframe)
 			Event.stopObserving(document.body,'mousemove',moveListener);
 			handle.stopObserving('mousedown', mousedownListener);
 			handle.observe('mousedown', mousedownListener_jump);
-			$('preview_iframe_holder').setStyle('cursor: pointer;');
+			$('preview_handle').setStyle('cursor: pointer;');
 			return false;
 		}
 		else if (size.height + moved.y - heightAdjust > viewport.height - 40) {
@@ -414,7 +420,7 @@ function DragCorner(container, handle, iframe)
 		}, 0.01);
 		handle.stopObserving('mousedown', mousedownListener_jump);
 		handle.observe('mousedown', mousedownListener);
-		$('preview_iframe_holder').setStyle('cursor: s-resize;');
+		$('preview_handle').setStyle('cursor: s-resize;');
 	}
 	
 	function mousedownListener(event) {
@@ -575,7 +581,7 @@ document.observe('dom:loaded', function() {
 <?php 
 	} else {
 ?>
-	var alertMsg = '<div class="error" id="flash_message">Two advanced features of ProStats ("FloatStats" & "Instant Viewer") are disabled because you are only logged in AdminCP, not in your Forum! In order to active those features, please log in your forum with current user and then come back and refresh this page.</div>';
+	var alertMsg = '<div class="error" id="flash_message">Two advanced features of ProStats ("FloatStats" & "Instant Viewer") are disabled because you are only logged in AdminCP, not in your Forum! In order to active those features, please log in your forum as current user and then come back and refresh this page.</div>';
 	Element.insert( $('inner'), {'top':alertMsg} );
 <?php 
 	}
@@ -670,7 +676,6 @@ function fs_css()
 	border-bottom:1px solid #555;
 	height:0px;
 	background:#e5e5e5;
-	cursor:pointer;
 	box-shadow:0px 2px 3px #999;
 }
 .preview_handle, .preview_handle_transition {
@@ -690,6 +695,9 @@ function fs_css()
 	-moz-transition: background-color 0.5s linear, color 0.5s linear;    /* FF3.7+ */
 	-o-transition: background-color 0.5s linear, color 0.5s linear;      /* Opera 10.5 */
 	-webkit-transition: background-color 0.5s linear, color 0.5s linear; /* Saf3.2+, Chrome */
+}
+.preview_handle {
+	cursor:pointer;
 }
 .preview_handle_transition {
 	background-color: #ffffff;
