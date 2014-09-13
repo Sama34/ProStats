@@ -2,10 +2,10 @@
 /*
  ___________________________________________________
 |													|
-| Plugin ProStats 1.7.3								|
+| Plugin ProStats 1.7.4								|
 | (c) 2008-2010 by SaeedGh (SaeehGhMail@Gmail.com)	|
 | Website: http://www.mybbhelp.ir					|
-| Last edit: 2010-04-21								|
+| Last edit: 2010-05-10								|
 |___________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -56,7 +56,7 @@ function prostats_info()
 		'website'		=>	'http://www.mybbhelp.ir',
 		'author'		=>	'SaeedGh',
 		'authorsite'	=>	'http://www.mybbhelp.ir',
-		'version'		=>	'1.7.3',
+		'version'		=>	'1.7.4',
 		'guid'			=>	'124b68d05dcdaf6b7971050baddf340f',
 		'compatibility'	=>	'14*,16*'
 	);
@@ -781,7 +781,7 @@ function prostats_run_global()
 }
 
 
-function prostats_run_index()
+function prostats_run_index($force = false)
 {
 	global $mybb, $parser, $prostats_tbl, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
 
@@ -802,7 +802,7 @@ function prostats_run_index()
 		exit;
 	}
 	
-	if (!$mybb->settings['ps_index']) {return false;}
+	if (!$mybb->settings['ps_index'] && !$force) {return false;}
 	
 	$numofrows = $mybb->settings['ps_num_rows'];
 	$prostats_tbl = "";
@@ -1672,7 +1672,7 @@ function prostats_run_ajax()
 		xmlhttp_error($lang->invalid_post_code);
 	}	
 	
-	prostats_run_index();
+	prostats_run_index(true);
 	
 	header('Content-Type: text/xml');
 	echo $prostats_tbl;
