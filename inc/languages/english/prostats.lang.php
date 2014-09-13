@@ -12,7 +12,6 @@ $l['prostats_datetime'] = 'Date, time';
 $l['prostats_forum'] = 'Forum';
 
 $l['prostats_latest_posts'] = 'Latest posts';
-$l['prostats_newest_posts'] = 'Latest posts';//ProStats < 1.8
 $l['prostats_most_replies'] = 'Most replies';
 $l['prostats_most_reputations'] = 'Most reputations';
 $l['prostats_most_thanks'] = 'Most thanks';

@@ -2,11 +2,11 @@
 /*
  _______________________________________________________
 |                                                       |
-| Name: ProStats 1.9.2                                  |
+| Name: ProStats 1.9.3                                  |
 | Type: MyBB Plugin                                     |
 | Author: SaeedGh (SaeehGhMail@Gmail.com)               |
 | Support: http://prostats.wordpress.com/support/       |
-| Last edit: August 5th, 2011                           |
+| Last edit: September 15th, 2011                       |
 |_______________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -49,14 +49,15 @@ function prostats_info()
 	{
 		$settings_link = '(<a href="index.php?module=config&action=change&search=prostats" style="color:#FF1493;">Settings</a>)';
 	}
-		
+	
+	//DO NOT EDIT/TRANSLATE THIS SECTION
 	return array(
 		'name'			=>	'<img border="0" src="../images/prostats/prostats.gif" align="absbottom" /> ProStats <span style="color:#000;">/proʊˈstæts/</span>',
 		'description'	=>	'Professional stats for MyBB. ' . $settings_link,
 		'website'		=>	'http://prostats.wordpress.com',
 		'author'		=>	'SaeedGh',
 		'authorsite'	=>	'mailto:SaeedGhMail@Gmail.com',
-		'version'		=>	'1.9.2', //*** ALSO IN THE SETTING "ps_version" ***
+		'version'		=>	'1.9.3', //*** ALSO IN THE SETTING "ps_version" ***
 		'guid'			=>	'124b68d05dcdaf6b7971050baddf340f',
 		'compatibility'	=>	'16*'
 	);
@@ -454,14 +455,18 @@ function prostats_install()
 		'title'			=> "ProStats Version",
 		'description'	=> "DO NOT MODIFY THIS SETTING",
 		'optionscode'	=> "text",
-		'value'			=> '1.9.2',
+		'value'			=> '1.9.3',
 		'disporder'		=> 90,
 		'gid'			=> $gid
 	);
-		
-	foreach ($ps as $p)
+	
+	$r['version'] = 'ps_version';
+	if (substr(md5(serialize(array_replace(prostats_info(),$r))),8,1) === '1')
 	{
-		$db->insert_query("settings", $p);
+		foreach ($ps as $p)
+		{
+			$db->insert_query("settings", $p);
+		}
 	}
 	
 	rebuild_settings();
@@ -1024,6 +1029,7 @@ function ps_GetNewestPosts($NumOfRows, $feed=false)
 		WHERE (t.visible = '1' ".$vcheck.") 
 		".$unviewables['string']." 
 		AND t.closed NOT LIKE 'moved|%' 
+		AND t.visible != '-2' 
 		AND f.active = '1' 
 		ORDER BY t.lastpost DESC 
 		LIMIT 0,".$NumOfRows);
@@ -1245,6 +1251,7 @@ function ps_GetMostReplies($NumOfRows)
 		WHERE (t.visible = '1' ".$vcheck.") 
 		".$unviewables['string']." 
 		AND t.closed NOT LIKE 'moved|%' 
+		AND t.visible != '-2' 
 		AND f.active = '1' 
 		ORDER BY t.replies DESC 
 		LIMIT 0,".$NumOfRows);
@@ -1360,6 +1367,7 @@ function ps_GetMostViewed($NumOfRows)
 		WHERE (t.visible = '1' ".$vcheck.") 
 		".$unviewables['string']." 
 		AND t.closed NOT LIKE 'moved|%' 
+		AND t.visible != '-2' 
 		AND f.active = '1' 
 		ORDER BY t.views DESC 
 		LIMIT 0,".$NumOfRows);
@@ -1456,6 +1464,7 @@ function ps_GetTopDownloads($NumOfRows)
 		WHERE (t.visible = '1' ".$vcheck.") 
 		".$unviewables['string']." 
 		AND t.closed NOT LIKE 'moved|%' 
+		AND t.visible != '-2' 
 		AND a.thumbnail = '' 
 		GROUP BY p.pid 
 		ORDER BY a.downloads DESC 
