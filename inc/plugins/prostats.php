@@ -1,12 +1,12 @@
 <?php
 /*
- ___________________________________________________
-|													|
-| Plugin ProStats 1.7.6								|
-| (c) 2008-2010 by SaeedGh (SaeehGhMail@Gmail.com)	|
-| Website: http://www.mybbhelp.ir					|
-| Last edit: 2010-10-02								|
-|___________________________________________________|
+ _______________________________________________________
+|														|
+| Plugin ProStats 1.7.7									|
+| (c) 2008-2011 by SaeedGh (SaeehGhMail@Gmail.com)		|
+| Website: http://community.mybb.com/user-14229.html	|
+| Last edit: January 15th, 2011							|
+|_______________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ function prostats_info()
 		'website'		=>	'http://community.mybb.com/thread-48686.html?',
 		'author'		=>	'SaeedGh',
 		'authorsite'	=>	'mailto:SaeedGhMail@Gmail.com',
-		'version'		=>	'1.7.6',
+		'version'		=>	'1.7.7',
 		'guid'			=>	'124b68d05dcdaf6b7971050baddf340f',
 		'compatibility'	=>	'14*,16*'
 	);
@@ -76,7 +76,6 @@ function prostats_activate()
 	$extra_cells = "select\n0=--\n1=Most replies\n2=Most reputations\n3=Most thanks\n4=Most viewed\n5=New members\n6=Top downloads\n7=Top posters\n8=Top referrers";
 
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats",
 		"template" => "
 <script type=\"text/javascript\">
@@ -140,7 +139,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 	
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_readstate_icon",
 		"template" => "<img src=\"{\$mybb->settings[\'bburl\']}/images/ps_mini{\$lightbulb[\'folder\']}.gif\" style=\"vertical-align:middle;\" alt=\"\" />&nbsp;",
 		"sid" => "-1",
@@ -148,7 +146,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 	
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_newestposts",
 		"template" => "<td class=\"{\$trow}\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
@@ -169,7 +166,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 	
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_newestposts_row",
 		"template" => "<tr class=\"{\$trow} smalltext\">
 		{\$newestposts_cols}
@@ -179,7 +175,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 	
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_newestposts_specialchar",
 		"template" => "<a href=\"{\$threadlink}\" style=\"text-decoration: none;\"><font face=\"arial\" style=\"line-height:10px;\">▼</font></a>",
 		"sid" => "-1",
@@ -188,7 +183,6 @@ function prostats_done(request)
 	
 	//Most Replies
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_mostreplies",
 		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
@@ -204,7 +198,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_mostreplies_row",
 		"template" => "<tr class=\"smalltext\">
 		<td>{\$readstate_icon}<a href=\"{\$threadlink}\" title=\"{\$subject_long}\">{\$subject}</a></td>
@@ -216,7 +209,6 @@ function prostats_done(request)
 	
 	//Most Reputation
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_mostreputation",
 		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
@@ -232,7 +224,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_mostreputation_row",
 		"template" => "<tr class=\"smalltext\">
 		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
@@ -244,7 +235,6 @@ function prostats_done(request)
 	
 	//Most Thanks
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_mostthanks",
 		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
@@ -260,7 +250,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_mostthanks_row",
 		"template" => "<tr class=\"smalltext\">
 		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
@@ -272,7 +261,6 @@ function prostats_done(request)
 	
 	//Most Views
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_mostviews",
 		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
@@ -288,7 +276,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_mostviews_row",
 		"template" => "<tr class=\"smalltext\">
 		<td>{\$readstate_icon}<a href=\"{\$threadlink}\" title=\"{\$subject_long}\">{\$subject}</a></td>
@@ -300,7 +287,6 @@ function prostats_done(request)
 	
 	//Newest Members
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_newmembers",
 		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
@@ -316,7 +302,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_newmembers_row",
 		"template" => "<tr class=\"smalltext\">
 		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
@@ -328,7 +313,6 @@ function prostats_done(request)
 	
 	//Top Downloads
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_topdownloads",
 		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
@@ -344,7 +328,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_topdownloads_row",
 		"template" => "<tr class=\"smalltext\">
 		<td><img src=\"{\$attach_icon}\" width=\"11\" height=\"11\" align=\"absmiddle\" alt=\"\" />&nbsp;<a href=\"{\$postlink}\" title=\"{\$subject_long}\">{\$subject}</a></td>
@@ -356,7 +339,6 @@ function prostats_done(request)
 	
 	//Top Posters
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_topposters",
 		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
@@ -372,7 +354,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_topposters_row",
 		"template" => "<tr class=\"smalltext\">
 		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
@@ -384,7 +365,6 @@ function prostats_done(request)
 	
 	//Top Referrers
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_topreferrers",
 		"template" => "<td><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"{\$theme[tablespace]}\">
 		<tr class=\"tcat smalltext\">
@@ -400,7 +380,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 		
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_topreferrers_row",
 		"template" => "<tr class=\"smalltext\">
 		<td><a href=\"{\$profilelink}\">{\$username}</a></td>
@@ -412,7 +391,6 @@ function prostats_done(request)
 	
 	
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_message",
 		"template" => "<tr class=\"trow1\">
 		<td colspan=\"{\$num_columns}\">
@@ -430,7 +408,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 	
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_onerowextra",
 		"template" => "<td class=\"{\$trow}\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\"><tr>{\$single_extra_content}</tr></table></td>",
 		"sid" => "-1",
@@ -438,7 +415,6 @@ function prostats_done(request)
 	$db->insert_query("templates", $templatearray);
 	
 	$templatearray = array(
-		"tid" => "NULL",
 		"title" => "prostats_tworowextra",
 		"template" => "<td class=\"{\$trow}\"><table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\"><tr>{\$extra_content_one}</tr><tr>{\$extra_content_two}</tr></table></td>",
 		"sid" => "-1",
@@ -457,7 +433,6 @@ function prostats_done(request)
 	$gid = $db->insert_id();
 
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_active",
 		"title"			=> "Activate",
 		"description"	=> "Do you want to activate the plugin?",
@@ -468,7 +443,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_ignoreforums",
 		"title"			=> "Ignore list",
 		"description"	=> "Forums not to be shown on ProStats. Seperate with comma. (e.g. 1,3,12)",
@@ -479,7 +453,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_index",
 		"title"			=> "Show in index",
 		"description"	=> "Show the ProStats table in the index page.",
@@ -490,7 +463,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_portal",
 		"title"			=> "Show in portal",
 		"description"	=> "Show the ProStats table in the portal page.",
@@ -501,7 +473,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_position",
 		"title"			=> "Table position",
 		"description"	=> "Position of stats in your board.",
@@ -512,7 +483,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_format_name",
 		"title"			=> "Style usernames",
 		"description"	=> "Style the username in true color, font, etc.",
@@ -523,7 +493,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_subject_length",
 		"title"			=> "Subject length",
 		"description"	=> "Maximum length of topic/post subjects. (Input 0 to remove the limitation)",
@@ -534,7 +503,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_num_rows",
 		"title"			=> "Number of rows",
 		"description"	=> "How much items must be shown? (Input an odd number greater than or equal to 3)",
@@ -545,7 +513,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_date_format",
 		"title"			=> "Date and Time format",
 		"description"	=> "The format of Date and Time which would be used in stats. [<a href=\"http://php.net/manual/en/function.date.php\" target=\"_blank\">More Information</a>]",
@@ -556,7 +523,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_date_format_ty",
 		"title"			=> "Replace format",
 		"description"	=> "A part of Date and Time format that must be replaced with \"Yesterday\" or \"Today\".",
@@ -567,7 +533,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_trow_message",
 		"title"			=> "Message block",
 		"description"	=> "This is a block on top/bottom of the ProStats table that you can put your HTML contents in it.",
@@ -578,7 +543,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_trow_message_pos",
 		"title"			=> "Message block position",
 		"description"	=> "The position of message block in the ProStats table.",
@@ -589,7 +553,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_newest_posts",
 		"title"			=> "Show newest posts",
 		"description"	=> "Show newest posts in the ProStats table.",
@@ -600,7 +563,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_newest_posts_cells",
 		"title"			=> "Stats of newest posts",
 		"description"	=> "What type of stats you want to be shown for newest posts?<br />Your choices are: <strong>Newest_posts, Date, Starter, Last_sender, Forum</strong><br />Separate them by comma (\",\").",
@@ -611,7 +573,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_newest_posts_pos",
 		"title"			=> "Newest posts position",
 		"description"	=> "The position of the Newest posts block.",
@@ -622,7 +583,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_cell_1",
 		"title"			=> "Extra cell 1 (Top-Left)",
 		"description"	=> "<div style=\"width:98px;height:43px;overflow:hidden;text-direction:rtl;margin-top:5px;\"><img style=\"float:left;\" src=\"../images/ps_cells.gif\" /><img style=\"float:left;margin-top:-178px;margin-left:-28px;\" src=\"../images/ps_cells.gif\" /></div>",
@@ -633,7 +593,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_cell_2",
 		"title"			=> "Extra cell 2 (Bottom-Left)",
 		"description"	=> "<div style=\"width:98px;height:43px;overflow:hidden;text-direction:rtl;margin-top:5px;\"><img style=\"float:left;\" src=\"../images/ps_cells.gif\" /><img style=\"float:left;margin-top:-159px;margin-left:-28px;\" src=\"../images/ps_cells.gif\" /></div>",
@@ -644,7 +603,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_cell_3",
 		"title"			=> "Extra cell 3 (Top-Middle)",
 		"description"	=> "<div style=\"width:98px;height:43px;overflow:hidden;text-direction:rtl;margin-top:5px;\"><img style=\"float:left;\" src=\"../images/ps_cells.gif\" /><img style=\"float:left;margin-top:-178px;margin-left:-14px;\" src=\"../images/ps_cells.gif\" /></div>",
@@ -655,7 +613,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_cell_4",
 		"title"			=> "Extra cell 4 (Bottom-Middle)",
 		"description"	=> "<div style=\"width:98px;height:43px;overflow:hidden;text-direction:rtl;margin-top:5px;\"><img style=\"float:left;\" src=\"../images/ps_cells.gif\" /><img style=\"float:left;margin-top:-159px;margin-left:-14px;\" src=\"../images/ps_cells.gif\" /></div>",
@@ -666,7 +623,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_cell_5",
 		"title"			=> "Extra cell 5 (Top-Right)",
 		"description"	=> "<div style=\"width:98px;height:43px;overflow:hidden;text-direction:rtl;margin-top:5px;\"><img style=\"float:left;\" src=\"../images/ps_cells.gif\" /><img style=\"float:left;margin-top:-178px;margin-left:0px;\" src=\"../images/ps_cells.gif\" /></div>",
@@ -677,7 +633,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_cell_6",
 		"title"			=> "Extra cell 6 (Bottom-Right)",
 		"description"	=> "<div style=\"width:98px;height:43px;overflow:hidden;text-direction:rtl;margin-top:5px;\"><img style=\"float:left;\" src=\"../images/ps_cells.gif\" /><img style=\"float:left;margin-top:-159px;margin-left:0px;\" src=\"../images/ps_cells.gif\" /></div>",
@@ -688,7 +643,6 @@ function prostats_done(request)
 	);
 
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_hidefrombots",
 		"title"			=> "Hide from search bots",
 		"description"	=> "Using this option you can hide stats from all search bots you\'ve defined them in <strong><a href=\"index.php?module=config-spiders\" target=\"_blank\">Spiders/Bots</a></strong> page. This will save bandwidth and decrease server load.",
@@ -699,7 +653,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_global_tag",
 		"title"			=> "Active global tag",
 		"description"	=> "So you can edit themes and insert &lt;ProStats&gt; tag wherever you want to show the stats",
@@ -710,7 +663,6 @@ function prostats_done(request)
 	);
 	
 	$ps[]= array(
-		"sid"			=> "NULL",
 		"name"			=> "ps_xml_feed",
 		"title"			=> "Active XML feed",
 		"description"	=> "Output the stats in XML format to show on other websites [<a href=\"http://community.mybb.com/thread-48686.html\" target=\"_blank\">More Information</a>]",
