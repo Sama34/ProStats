@@ -2,10 +2,10 @@
 /*
  ___________________________________________________
 |													|
-| Plugin ProStats 1.7								|
+| Plugin ProStats 1.7.2								|
 | (c) 2008-2010 by SaeedGh (SaeehGhMail@Gmail.com)	|
 | Website: http://www.mybbhelp.ir					|
-| Last edit: 2010-02-02								|
+| Last edit: 2010-04-13								|
 |___________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -23,31 +23,41 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-if(!defined("IN_MYBB")) {
+if (!defined("IN_MYBB"))
+{
 	die("Direct initialization of this file is not allowed.");
 }
 
-if(isset($GLOBALS['templatelist'])){
-	$GLOBALS['templatelist'] .= ",prostats,prostats_readstate_icon,prostats_newmembers,prostats_newmembers_row,prostats_topposters,prostats_topposters_row,prostats_topreferrers,prostats_topreferrers_row,prostats_mostthanks,prostats_mostthanks_row,prostats_newthreads,prostats_newthreads_row,prostats_newthreads_specialchar,prostats_mostreplies,prostats_mostreplies_row,prostats_mostviews,prostats_mostviews_row,prostats_newposts,prostats_newposts_row,prostats_topdownloads,prostats_topdownloads_row,prostats_message,prostats_onerowextra,prostats_tworowextra";
-}
-
-$plugins->add_hook('pre_output_page', 'prostats_run_global');
+$plugins->add_hook('global_start', 'prostats_run_global');
+$plugins->add_hook('pre_output_page', 'prostats_run_pre_output');
 $plugins->add_hook('index_start', 'prostats_run_index');
 $plugins->add_hook('portal_start', 'prostats_run_portal');
 $plugins->add_hook('xmlhttp', 'prostats_run_ajax');
 
+
 function prostats_info()
 {
+	global $mybb, $db;
+	
+	$settings_link = '';
+	
+	$query = $db->simple_select('settinggroups', '*', "name='ProStats'");
+
+	if (count($db->fetch_array($query)))
+	{
+		$settings_link = '(<a href="index.php?module=config&action=change&search=prostats" style="color:#FF1493;">Settings</a>)';
+	}
+	
 	return array(
-		"name"		=> "<img border=\"0\" src=\"../images/MybbHelp_small.gif\" align=\"absbottom\" /> <img border=\"0\" src=\"../images/ProStats.gif\" align=\"absbottom\" /> ProStats",
-		"title"		=> "ProStats",
-		"description" => "Professional stats for MyBB.",
-		"website"	 => "http://www.mybbhelp.ir",
-		"author"	  => "SaeedGh",
-		"authorsite"  => "http://www.mybbhelp.ir",
-		"version"	 => "1.7",
-		'guid'		=> '124b68d05dcdaf6b7971050baddf340f',
-		'compatibility' => '14*,16*'
+		'name'			=>	'<img border="0" src="../images/MybbHelp_small.gif" align="absbottom" /> <img border="0" src="../images/ProStats.gif" align="absbottom" /> ProStats',
+		'title'			=>	'ProStats',
+		'description'	=>	'Professional stats for MyBB. ' . $settings_link,
+		'website'		=>	'http://www.mybbhelp.ir',
+		'author'		=>	'SaeedGh',
+		'authorsite'	=>	'http://www.mybbhelp.ir',
+		'version'		=>	'1.7.2',
+		'guid'			=>	'124b68d05dcdaf6b7971050baddf340f',
+		'compatibility'	=>	'14*,16*'
 	);
 }
 
@@ -56,11 +66,11 @@ function prostats_activate()
 {
 	global $db;
 	
-	require MYBB_ROOT."inc/adminfunctions_templates.php";
-	find_replace_templatesets("index", '#{\$header}(\r?)\n#', "{\$header}\n{\$ps_header_index}\n");
-	find_replace_templatesets("index", '#{\$forums}(\r?)\n#', "{\$forums}\n{\$ps_footer_index}\n");
-	find_replace_templatesets("portal", '#{\$header}(\r?)\n#', "{\$header}\n{\$ps_header_portal}\n");
-	find_replace_templatesets("portal", '#{\$footer}(\r?)\n#', "{\$ps_footer_portal}\n{\$footer}\n");
+	require MYBB_ROOT.'inc/adminfunctions_templates.php';
+	find_replace_templatesets('index', '#{\$header}(\r?)\n#', "{\$header}\n{\$ps_header_index}\n");
+	find_replace_templatesets('index', '#{\$forums}(\r?)\n#', "{\$forums}\n{\$ps_footer_index}\n");
+	find_replace_templatesets('portal', '#{\$header}(\r?)\n#', "{\$header}\n{\$ps_header_portal}\n");
+	find_replace_templatesets('portal', '#{\$footer}(\r?)\n#', "{\$ps_footer_portal}\n{\$footer}\n");
 	
 	$extra_cells = "select\n0=--\n1=Top posters\n2=Top referrers\n3=Most replies\n4=Most viewed\n5=Most thanks\n6=New members\n7=Top downloads";
 
@@ -451,12 +461,23 @@ function prostats_done(request)
 	
 	$ps[]= array(
 		"sid"			=> "NULL",
+		"name"			=> "ps_ignoreforums",
+		"title"			=> "Ignore list",
+		"description"	=> "Forums not to be shown on ProStats. Seperate with comma. (e.g. 1,3,12)",
+		"optionscode"	=> "text",
+		"value"			=> '',
+		"disporder"		=> '3',
+		"gid"			=> intval($gid),
+	);
+	
+	$ps[]= array(
+		"sid"			=> "NULL",
 		"name"			=> "ps_index",
 		"title"			=> "Show in index",
 		"description"	=> "Show the ProStats table in the index page.",
 		"optionscode"	=> "yesno",
 		"value"			=> '1',
-		"disporder"		=> '2',
+		"disporder"		=> '4',
 		"gid"			=> intval($gid),
 	);
 	
@@ -467,7 +488,7 @@ function prostats_done(request)
 		"description"	=> "Show the ProStats table in the portal page.",
 		"optionscode"	=> "yesno",
 		"value"			=> '0',
-		"disporder"		=> '3',
+		"disporder"		=> '5',
 		"gid"			=> intval($gid),
 	);
 	
@@ -497,7 +518,7 @@ function prostats_done(request)
 		"sid"			=> "NULL",
 		"name"			=> "ps_subject_length",
 		"title"			=> "Subject length",
-		"description"	=> "Maximum length of topic/post subjects. (input 0 to remove the limitation)",
+		"description"	=> "Maximum length of topic/post subjects. (Input 0 to remove the limitation)",
 		"optionscode"	=> "text",
 		"value"			=> '25',
 		"disporder"		=> '30',
@@ -519,7 +540,7 @@ function prostats_done(request)
 		"sid"			=> "NULL",
 		"name"			=> "ps_date_format",
 		"title"			=> "Date and Time format",
-		"description"	=> "The format of Date and Time in the ProStats table.",
+		"description"	=> "The format of Date and Time in the ProStats table (<a href=\"http://php.net/manual/en/function.date.php\">More details</a>).",
 		"optionscode"	=> "text",
 		"value"			=> 'm-d, H:i',
 		"disporder"		=> '42',
@@ -530,7 +551,7 @@ function prostats_done(request)
 		"sid"			=> "NULL",
 		"name"			=> "ps_date_format_ty",
 		"title"			=> "Replace format",
-		"description"	=> "A part of Date and Time format that can be replaced with \"Today\" or \"Tomorrow\".",
+		"description"	=> "A part of Date and Time format that can be replaced with \"Yesterday\" or \"Today\".",
 		"optionscode"	=> "text",
 		"value"			=> 'm-d',
 		"disporder"		=> '43',
@@ -735,38 +756,57 @@ function prostats_deactivate()
 	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_onerowextra'");
 	$db->query("DELETE FROM ".TABLE_PREFIX."templates WHERE title='prostats_tworowextra'");
 	
-	$db->delete_query("settings","name IN ('ps_active','ps_index','ps_portal','ps_position','ps_format_name','ps_subject_length','ps_num_rows','ps_date_format','ps_date_format_ty','ps_trow_message','ps_trow_message_pos','ps_last_topics','ps_last_topics_cells','ps_last_topics_pos','ps_cell_1','ps_cell_2','ps_cell_3','ps_cell_4','ps_cell_5','ps_cell_6','ps_global_tag','ps_xml_feed','ps_show_copyright')");
+	$db->delete_query("settings","name IN ('ps_active','ps_ignoreforums','ps_index','ps_portal','ps_position','ps_format_name','ps_subject_length','ps_num_rows','ps_date_format','ps_date_format_ty','ps_trow_message','ps_trow_message_pos','ps_last_topics','ps_last_topics_cells','ps_last_topics_pos','ps_cell_1','ps_cell_2','ps_cell_3','ps_cell_4','ps_cell_5','ps_cell_6','ps_global_tag','ps_xml_feed','ps_show_copyright')");
 	$db->delete_query("settinggroups","name='ProStats'");
+}
+
+
+function prostats_run_global()
+{
+	global $mybb;
+	
+	if (isset($GLOBALS['templatelist']))
+	{
+		if ($mybb->settings['ps_active'] && defined('THIS_SCRIPT'))
+		{
+			if (($mybb->settings['ps_index'] && THIS_SCRIPT == 'index.php')
+				|| ($mybb->settings['ps_portal'] && THIS_SCRIPT == 'portal.php')
+				|| $mybb->settings['ps_global_tag'])
+			{
+				$GLOBALS['templatelist'] .= ",prostats,prostats_readstate_icon,prostats_newmembers,prostats_newmembers_row,prostats_topposters,prostats_topposters_row,prostats_topreferrers,prostats_topreferrers_row,prostats_mostthanks,prostats_mostthanks_row,prostats_newthreads,prostats_newthreads_row,prostats_newthreads_specialchar,prostats_mostreplies,prostats_mostreplies_row,prostats_mostviews,prostats_mostviews_row,prostats_newposts,prostats_newposts_row,prostats_topdownloads,prostats_topdownloads_row,prostats_message,prostats_onerowextra,prostats_tworowextra";
+			}
+		}
+	}
 }
 
 
 function prostats_run_index()
 {
-	global $mybb, $prostats_tbl, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
+	global $mybb, $parser, $prostats_tbl, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
 
-	if(!$mybb->settings['ps_active']) {return false;}
+	if (!$mybb->settings['ps_active']) {return false;}
 
-	if(ceil($mybb->settings['ps_num_rows']) != $mybb->settings['ps_num_rows'] || ceil($mybb->settings['ps_subject_length']) != $mybb->settings['ps_subject_length']){return false;}
-	if(intval($mybb->settings['ps_num_rows']) < 3) {return false;}
+	if (ceil($mybb->settings['ps_num_rows']) != $mybb->settings['ps_num_rows'] || ceil($mybb->settings['ps_subject_length']) != $mybb->settings['ps_subject_length']){return false;}
+	if (intval($mybb->settings['ps_num_rows']) < 3) {return false;}
 	
-	if(strtolower($mybb->input['stats'])=='xml' && $mybb->settings['ps_xml_feed'])
+	if (strtolower($mybb->input['stats'])=='xml' && $mybb->settings['ps_xml_feed'])
 	{
 		prostats_run_feed();
 		exit;
 	}
 	
-	if(!$mybb->settings['ps_index']) {return false;}
+	if (!$mybb->settings['ps_index']) {return false;}
 	
 	$numofrows = $mybb->settings['ps_num_rows'];
 	$prostats_tbl = "";
 	
 	$prostats_tbl = ps_MakeTable();
 
-	if($mybb->settings['ps_position'] == 0)
+	if ($mybb->settings['ps_position'] == 0)
 	{
 		$ps_header_index = $prostats_tbl;
 	}
-	else if($mybb->settings['ps_position'] == 1)
+	else if ($mybb->settings['ps_position'] == 1)
 	{
 		$ps_footer_index = $prostats_tbl;
 	}
@@ -775,41 +815,41 @@ function prostats_run_index()
 
 function prostats_run_portal()
 {
-	global $mybb, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
+	global $mybb, $parser, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
 	
-	if(!$mybb->settings['ps_active']) {return false;}
+	if (!$mybb->settings['ps_active']) {return false;}
 
-	if(ceil($mybb->settings['ps_num_rows']) != $mybb->settings['ps_num_rows'] || ceil($mybb->settings['ps_subject_length']) != $mybb->settings['ps_subject_length']){return false;}
+	if (ceil($mybb->settings['ps_num_rows']) != $mybb->settings['ps_num_rows'] || ceil($mybb->settings['ps_subject_length']) != $mybb->settings['ps_subject_length']){return false;}
 	
-	if(!$mybb->settings['ps_portal']) {return false;}
-	if(intval($mybb->settings['ps_num_rows']) < 3) {return false;}
+	if (!$mybb->settings['ps_portal']) {return false;}
+	if (intval($mybb->settings['ps_num_rows']) < 3) {return false;}
 	
 	$numofrows = $mybb->settings['ps_num_rows'];
 	$prostats_tbl = "";
 	
 	$prostats_tbl = ps_MakeTable();
 
-	if($mybb->settings['ps_position'] == 0)
+	if ($mybb->settings['ps_position'] == 0)
 	{
 		$ps_header_portal = $prostats_tbl;
 	}
-	else if($mybb->settings['ps_position'] == 1)
+	else if ($mybb->settings['ps_position'] == 1)
 	{
 		$ps_footer_portal = $prostats_tbl;
 	}
 }
 
 
-function prostats_run_global($contents)
+function prostats_run_pre_output($contents)
 {
-	global $mybb, $prostats_tbl, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
+	global $mybb, $parser, $prostats_tbl, $ps_header_index, $ps_footer_index, $ps_header_portal, $ps_footer_portal;
 
-	if(!$mybb->settings['ps_active']) {return false;}
+	if (!$mybb->settings['ps_active']) {return false;}
 
-	if(ceil($mybb->settings['ps_num_rows']) != $mybb->settings['ps_num_rows'] || ceil($mybb->settings['ps_subject_length']) != $mybb->settings['ps_subject_length']){return false;}
-	if(intval($mybb->settings['ps_num_rows']) < 3) {return false;}
+	if (ceil($mybb->settings['ps_num_rows']) != $mybb->settings['ps_num_rows'] || ceil($mybb->settings['ps_subject_length']) != $mybb->settings['ps_subject_length']){return false;}
+	if (intval($mybb->settings['ps_num_rows']) < 3) {return false;}
 	
-	if(!$mybb->settings['ps_global_tag']){
+	if (!$mybb->settings['ps_global_tag']){
 		$contents = str_replace('<ProStats>', '', $contents);
 		return false;
 	}
@@ -886,26 +926,24 @@ function ps_GetLastTopics($NumOfRows, $feed=false)
 	
 	while ($newest_threads = $db->fetch_array($query))
 	{
-		$subject_long = htmlspecialchars_uni($parser->parse_badwords($newest_threads['subject']));
-	
 		$tid = $newest_threads['tid'];
 		$fuid = $newest_threads['uid'];
 		$fid = $newest_threads['fid'];
 		$lightbulb['folder'] = "off";
 		$newthreads_cols = "";
 		
-		if($mybb->user['uid'])
+		if ($mybb->user['uid'])
 		{
-			if($newest_threads['dateline'] && $newest_threads['truid'] == $mybb->user['uid'])
+			if ($newest_threads['dateline'] && $newest_threads['truid'] == $mybb->user['uid'])
 			{
-				if($newest_threads['lastpost'] > $newest_threads['dateline'])
+				if ($newest_threads['lastpost'] > $newest_threads['dateline'])
 				{
 					$lightbulb['folder'] = "on";
 				}
 			}
 			else
 			{
-				if($newest_threads['lastpost'] > $mybb->user['lastvisit'])
+				if ($newest_threads['lastpost'] > $mybb->user['lastvisit'])
 				{
 					$lightbulb['folder'] = "on";
 				}
@@ -914,10 +952,10 @@ function ps_GetLastTopics($NumOfRows, $feed=false)
 		
 		$dateformat = $mybb->settings['ps_date_format'];
 		
-		if($active_cells['Date'])
+		if ($active_cells['Date'])
 		{
 			$isty = ps_GetTY($mybb->settings['ps_date_format_ty'], $newest_threads['lastpost'], $offset="", $ty=1);
-			if($isty)
+			if ($isty)
 			{
 				$dateformat = preg_replace('#'.$mybb->settings['ps_date_format_ty'].'#', "vvv", $dateformat);
 				$datetime = my_date($dateformat, $newest_threads['lastpost'], NULL, 1);
@@ -929,31 +967,33 @@ function ps_GetLastTopics($NumOfRows, $feed=false)
 			}
 		}
 		
-		if($active_cells['New_threads'])
+		if ($active_cells['New_threads'])
 		{
-			$subject = htmlspecialchars_uni(ps_SubjectLength($parser->parse_badwords($newest_threads['subject'])));
+			$parsed_subject = $parser->parse_badwords($newest_threads['subject']);
+			$subject = htmlspecialchars_uni(ps_SubjectLength($parsed_subject));
+			$subject_long = htmlspecialchars_uni($parsed_subject);
 			$threadlink = get_thread_link($tid,NULL,"lastpost");
 			eval("\$readstate_icon = \"".$templates->get("prostats_readstate_icon")."\";");
 			eval("\$newthreads_specialchar = \"".$templates->get("prostats_newthreads_specialchar")."\";");
 		}
 		
-		if($active_cells['Starter'])
+		if ($active_cells['Starter'])
 		{
 			$username = ps_FormatNameDb($fuid, htmlspecialchars_uni($newest_threads['username']));
 			$profilelink = get_profile_link($fuid);
 		}
 		
-		if($active_cells['Last_sender'])
+		if ($active_cells['Last_sender'])
 		{
 			$lastposter_uname = ps_FormatNameDb($newest_threads['lastposteruid'], htmlspecialchars_uni($newest_threads['lastposter']));
 			$lastposter_profile = get_profile_link($newest_threads['lastposteruid']);
 		}
 		
-		if($active_cells['Forum'])
+		if ($active_cells['Forum'])
 		{
 			$forumlink = get_forum_link($fid);
-			$forum_longname = $parser->parse_badwords(strip_tags($newest_threads['name']));
-			$forumname = htmlspecialchars_uni(ps_SubjectLength($forum_longname, NULL, true));		
+			$forumname_long = $parser->parse_badwords(strip_tags($newest_threads['name']));
+			$forumname = htmlspecialchars_uni(ps_SubjectLength($forumname_long, NULL, true));		
 		}
 		
 		for($i=1;$i<=$colspan;++$i)
@@ -973,7 +1013,7 @@ function ps_GetLastTopics($NumOfRows, $feed=false)
 					$newthreads_cols .= "<td><a href=\"".$lastposter_profile."\">".$lastposter_uname."</a></td>";
 					break;
 				case "Forum" :
-					$newthreads_cols.= "<td><a href=\"".$forumlink."\" title=\"".$forum_longname."\">".$forumname."</a></td>";
+					$newthreads_cols.= "<td><a href=\"".$forumlink."\" title=\"".$forumname_long."\">".$forumname."</a></td>";
 					break;
 				default: NULL;
 			}
@@ -982,7 +1022,7 @@ function ps_GetLastTopics($NumOfRows, $feed=false)
 		eval("\$newthreads_row .= \"".$templates->get("prostats_newthreads_row")."\";");
 		
 		
-		if($feed)
+		if ($feed)
 		{
 			$feeditem[$loop_counter]['tid'] = $tid;
 			$feeditem[$loop_counter]['fuid'] = $fuid;
@@ -991,28 +1031,29 @@ function ps_GetLastTopics($NumOfRows, $feed=false)
 			$feeditem[$loop_counter]['lasttime'] = $newest_threads['lastpost'];
 			$feeditem[$loop_counter]['datetime'] = $datetime;
 			
-			if($active_cells['New_threads'])
+			if ($active_cells['New_threads'])
 			{
 				$feeditem[$loop_counter]['subject'] = $subject;
+				$feeditem[$loop_counter]['subject_long'] = $subject_long;
 			}
 			
-			if($active_cells['Starter'])
+			if ($active_cells['Starter'])
 			{
 				$feeditem[$loop_counter]['username'] = htmlspecialchars_uni($newest_threads['username']);
 				$feeditem[$loop_counter]['username_formed'] = $username;
 			}
 			
-			if($active_cells['Last_sender'])
+			if ($active_cells['Last_sender'])
 			{
 				$feeditem[$loop_counter]['lastposter_uid'] = $newest_threads['lastposteruid'];
 				$feeditem[$loop_counter]['lastposter_uname'] = htmlspecialchars_uni($newest_threads['lastposter']);
 				$feeditem[$loop_counter]['lastposter_uname_formed'] = $lastposter_uname;
 			}
 			
-			if($active_cells['Forum'])
+			if ($active_cells['Forum'])
 			{
 				$feeditem[$loop_counter]['forumname'] = $forumname;
-				$feeditem[$loop_counter]['forum_longname'] = $forum_longname;
+				$feeditem[$loop_counter]['forumname_long'] = $forumname_long;
 			}
 		}
 		
@@ -1098,18 +1139,18 @@ function ps_GetMostReplies($NumOfRows)
 		$replies = $most_replies['replies'];
 		$lightbulb['folder'] = "off";
 
-		if($mybb->user['uid'])
+		if ($mybb->user['uid'])
 		{
-			if($most_replies['dateline'] && $most_replies['truid'] == $mybb->user['uid'])
+			if ($most_replies['dateline'] && $most_replies['truid'] == $mybb->user['uid'])
 			{
-				if($most_replies['lastpost'] > $most_replies['dateline'])
+				if ($most_replies['lastpost'] > $most_replies['dateline'])
 				{
 					$lightbulb['folder'] = "on";
 				}
 			}
 			else
 			{
-				if($most_replies['lastpost'] > $mybb->user['lastvisit'])
+				if ($most_replies['lastpost'] > $mybb->user['lastvisit'])
 				{
 					$lightbulb['folder'] = "on";
 				}
@@ -1150,18 +1191,18 @@ function ps_GetMostViewed($NumOfRows)
 		$views = $most_views['views'];
 		$lightbulb['folder'] = "off";
 
-		if($mybb->user['uid'])
+		if ($mybb->user['uid'])
 		{
-			if($most_views['dateline'] && $most_views['truid'] == $mybb->user['uid'])
+			if ($most_views['dateline'] && $most_views['truid'] == $mybb->user['uid'])
 			{
-				if($most_views['lastpost'] > $most_views['dateline'])
+				if ($most_views['lastpost'] > $most_views['dateline'])
 				{
 					$lightbulb['folder'] = "on";
 				}
 			}
 			else
 			{
-				if($most_views['lastpost'] > $mybb->user['lastvisit'])
+				if ($most_views['lastpost'] > $mybb->user['lastvisit'])
 				{
 					$lightbulb['folder'] = "on";
 				}
@@ -1216,14 +1257,14 @@ function ps_GetNewMembers($NumOfRows)
 		$uid = $newest_members['uid'];
 		$profilelink = get_profile_link($uid);
 		$username = ps_FormatName(htmlspecialchars_uni($newest_members['username']), $newest_members['usergroup'], $newest_members['displaygroup']);
-		if($newest_members['regdate']==0 || !$mybb->settings['ps_date_format_ty'])
+		if ($newest_members['regdate']==0 || !$mybb->settings['ps_date_format_ty'])
 		{
 			$regdate = $lang->prostats_err_undefind;
 		}
 		else
 		{
 			$isty = ps_GetTY($mybb->settings['ps_date_format_ty'], $newest_members['regdate'], $offset="", $ty=1);
-			if($isty)
+			if ($isty)
 			{
 				$regdate = $isty;
 			}
@@ -1284,7 +1325,7 @@ function ps_GetTopDownloads($NumOfRows)
 
 function ps_MakeTable()
 {
-	global $mybb, $theme, $lang, $templates, $lightbulb, $unread_forums, $ps_align;
+	global $mybb, $theme, $lang, $templates, $parser, $lightbulb, $unread_forums, $ps_align;
 	$lang->load("prostats");
 	
 	$right_cols = $left_cols = $middle_cols = $extra_content = $extra_content_1_2 = $extra_content_3_4 = $extra_content_5_6 = $prostats_copyright = "";
@@ -1293,7 +1334,7 @@ function ps_MakeTable()
 	$ps_align = $lang->settings['rtl'] ? "right" : "left";
 	$ps_ralign = $lang->settings['rtl'] ? "left" : "right";
 	
-	if($mybb->settings['ps_last_topics'] == 1)
+	if ($mybb->settings['ps_last_topics'] == 1)
 	{
 		$middle_cols = ps_GetLastTopics($mybb->settings['ps_num_rows']);
 		$num_columns = 4;
@@ -1307,11 +1348,11 @@ function ps_MakeTable()
 	$extra_row[1] = $extra_row[2] = $extra_row[3] = 2;
 	$extra_cols = 3;
 	
-	if($extra_cell[5] > 0)
+	if ($extra_cell[5] > 0)
 	{
 		$trow = "trow2";
 		$extra_cols = 3;
-		if($extra_cell[6] == 0)
+		if ($extra_cell[6] == 0)
 		{
 			$extra_row[3] = 1;
 			$single_extra_content = ps_GetExtraData($extra_cell[5],true);
@@ -1326,11 +1367,11 @@ function ps_MakeTable()
 	}
 
 	
-	if($extra_cell[3] > 0)
+	if ($extra_cell[3] > 0)
 	{
 		$trow = "trow1";
 		$extra_cols = 2;
-		if($extra_cell[4] == 0)
+		if ($extra_cell[4] == 0)
 		{
 			$extra_row[2] = 1;
 			$single_extra_content = ps_GetExtraData($extra_cell[3],true);
@@ -1344,11 +1385,11 @@ function ps_MakeTable()
 		}
 	}
 	
-	if($extra_cell[1] > 0)
+	if ($extra_cell[1] > 0)
 	{
 		$trow = "trow2";
 		$extra_cols = 1;
-		if($extra_cell[2] == 0)
+		if ($extra_cell[2] == 0)
 		{
 			$extra_row[1] = 1;
 			$single_extra_content = ps_GetExtraData($extra_cell[1],true);
@@ -1362,7 +1403,7 @@ function ps_MakeTable()
 		}
 	}
 	
-	if($lang->settings['rtl'])
+	if ($lang->settings['rtl'])
 	{
 		$extra_content = $extra_content_5_6 . $extra_content_3_4 . $extra_content_1_2;
 		$mybb->settings['ps_last_topics_pos'] ? $right_cols = $extra_content : $left_cols = $extra_content;
@@ -1375,9 +1416,9 @@ function ps_MakeTable()
 
 	$prostats_content = $left_cols . $middle_cols . $right_cols;
 	
-	if($mybb->settings['ps_trow_message'] != "") {
+	if ($mybb->settings['ps_trow_message'] != "") {
 		$prostats_message = unhtmlentities(htmlspecialchars_uni($mybb->settings['ps_trow_message']));
-		if($mybb->settings['ps_trow_message_pos'] == 0) {
+		if ($mybb->settings['ps_trow_message_pos'] == 0) {
 			eval("\$trow_message_top = \"".$templates->get("prostats_message")."\";");
 		}
 		else
@@ -1389,7 +1430,7 @@ function ps_MakeTable()
 	$ps_cr_dyn = "<div id=\"prostats_cpr\" style=\"text-align:right;font-family:tahoma;font-size:9px;\"><a href=\"http://www.mybbhelp.ir/\" target=\"_blank\">پشتیبانی فارسی MyBB</a></div><script type=\"text/javascript\">/*<!--*/$(\"prostats_cpr\").update(\"ProStats by <a href=\\\"http://www.mybbhelp.ir/\\\" target=\\\"_blank\\\">MybbHelp.ir</a>\");/*-->*/</script>";
 	$ps_cr_stk = "<div id=\"prostats_cpr\" style=\"text-align:right;font-family:tahoma;font-size:9px;\">ProStats by  <a href=\"http://www.mybbhelp.ir/\" target=\"_blank\">MybbHelp.ir</a></div>";
 	
-	if($mybb->settings['ps_show_copyright']){
+	if ($mybb->settings['ps_show_copyright']){
 		$prostats_copyright = (THIS_SCRIPT == 'xmlhttp.php' ? $ps_cr_stk : $ps_cr_dyn);
 	}else{
 		$prostats_copyright = "<div id=\"prostats_cpr\" style=\"position:absolute;top:-500px;\"><h1><strong><a href=\"http://www.mybbhelp.ir/\" target=\"_blank\">پشتیبانی فارسی MyBB</a></strong></h1></div><script type=\"text/javascript\">/*<!--*/$(\"prostats_cpr\").update(\"\");/*-->*/</script>";
@@ -1404,7 +1445,7 @@ function ps_GetExtraData($cellnum,$fullrows=false)
 {
 	global $mybb;
 	
-	if($fullrows)
+	if ($fullrows)
 	{
 		$rows = ($mybb->settings['ps_num_rows'] + 1);
 	}
@@ -1412,7 +1453,7 @@ function ps_GetExtraData($cellnum,$fullrows=false)
 	{
 		$rows = $mybb->settings['ps_num_rows'];
 		$rows = (ceil($rows/2)-1);
-		if(!(($mybb->settings['ps_num_rows'])%2) && !($cellnum%2)){++$rows;}
+		if (!(($mybb->settings['ps_num_rows'])%2) && !($cellnum%2)){++$rows;}
 	}
 
 	switch($cellnum)
@@ -1432,13 +1473,34 @@ function ps_GetExtraData($cellnum,$fullrows=false)
 }
 
 
-function ps_GetUnviewable($name="") {
-	$unviewwhere = "";
-	$name ? $name .= "." : NULL;
+function ps_GetUnviewable($name="")
+{
+	global $mybb;
+	$unviewwhere = $comma = '';
+	$name ? $name .= '.' : NULL;
 	$unviewable = get_unviewable_forums();
-	if($unviewable) {
+	
+	if ($mybb->settings['ps_ignoreforums'])
+	{
+		$ignoreforums = explode(',', $mybb->settings['ps_ignoreforums']);
+		
+		if (count($ignoreforums))
+		{
+			$unviewable ? $unviewable .= ',' : NULL;
+			
+			foreach($ignoreforums as $fid)
+			{
+				$unviewable .= $comma."'".intval($fid)."'";
+				$comma = ',';
+			}
+		}
+	}
+	
+	if ($unviewable)
+	{
 		$unviewwhere = "AND ".$name."fid NOT IN (".$unviewable.")";
 	}
+
 	return $unviewwhere;
 }
 
@@ -1447,7 +1509,7 @@ function ps_FormatName($username, $usergroup, $displaygroup)
 {
 	global $mybb;
 
-	if($mybb->settings['ps_format_name'] == "1")
+	if ($mybb->settings['ps_format_name'] == '1')
 	{
 		$username = format_name($username, $usergroup, $displaygroup);
 	}
@@ -1459,13 +1521,13 @@ function ps_FormatNameDb($uid, $username="")
 {
 	global $mybb, $db;
 
-	if($mybb->settings['ps_format_name'] == "1")
+	if ($mybb->settings['ps_format_name'] == "1")
 	{
 		$query = $db->query("SELECT username,usergroup,displaygroup FROM ".TABLE_PREFIX."users WHERE uid = '".$uid."'");
 		$query_array = $db->fetch_array($query);
 		$username = format_name($query_array['username'], $query_array['usergroup'], $query_array['displaygroup']);
 	}
-	else if($username=="")
+	else if ($username=="")
 	{
 		$query = $db->query("SELECT username FROM ".TABLE_PREFIX."users WHERE uid = '".$uid."'");
 		$query_array = $db->fetch_array($query);
@@ -1485,20 +1547,20 @@ function ps_SubjectLength($subject, $length="", $half=false)
 	{
 		if (my_strlen($subject) > $length) 
 		{
-			$subject = my_substr($subject,0,$length) . "...";
+			$subject = my_substr($subject,0,$length) . '...';
 		}
 	}
 	return $subject;
 }
 
 
-function ps_GetTY($format='m-d', $stamp="", $offset="", $ty=1)
+function ps_GetTY($format='m-d', $stamp='', $offset='', $ty=1)
 {
 	global $mybb, $lang, $mybbadmin, $plugins;
 
-	if(!$offset && $offset != '0')
+	if (!$offset && $offset != '0')
 	{
-		if($mybb->user['uid'] != 0 && array_key_exists("timezone", $mybb->user))
+		if ($mybb->user['uid'] != 0 && array_key_exists('timezone', $mybb->user))
 		{
 			$offset = $mybb->user['timezone'];
 			$dstcorrection = $mybb->user['dst'];
@@ -1509,36 +1571,36 @@ function ps_GetTY($format='m-d', $stamp="", $offset="", $ty=1)
 			$dstcorrection = $mybb->settings['dstcorrection'];
 		}
 
-		if($dstcorrection == 1)
+		if ($dstcorrection == 1)
 		{
 			++$offset;
-			if(my_substr($offset, 0, 1) != "-")
+			if (my_substr($offset, 0, 1) != '-')
 			{
-				$offset = "+".$offset;
+				$offset = '+'.$offset;
 			}
 		}
 	}
 
-	if($offset == "-")
+	if ($offset == '-')
 	{
 		$offset = 0;
 	}
 	
 	$date = gmdate($format, $stamp + ($offset * 3600));
 	
-	if($format && $ty)
+	if ($format && $ty)
 	{
 		$stamp = TIME_NOW;
 		
 		$todaysdate = gmdate($format, $stamp + ($offset * 3600));
 		$yesterdaysdate = gmdate($format, ($stamp - 86400) + ($offset * 3600));
 
-		if($todaysdate == $date)
+		if ($todaysdate == $date)
 		{
 			$date = $lang->today;
 			return $date;
 		}
-		else if($yesterdaysdate == $date)
+		else if ($yesterdaysdate == $date)
 		{
 			$date = $lang->yesterday;
 			return $date;
@@ -1552,14 +1614,14 @@ function prostats_run_ajax()
 {
 	global $mybb, $lang, $parser, $prostats_tbl;
 	
-	if(!$mybb->settings['ps_active']) {return false;}
+	if (!$mybb->settings['ps_active']) {return false;}
 
-	require_once MYBB_ROOT."inc/class_parser.php";
+	require_once MYBB_ROOT.'inc/class_parser.php';
 	$parser = new postParser;
 	
-	if($mybb->input['action'] != "prostats_reload" || $mybb->request_method != "post"){return false;exit;}
+	if ($mybb->input['action'] != "prostats_reload" || $mybb->request_method != "post"){return false;exit;}
 
-	if(!verify_post_check($mybb->input['my_post_key'], true))
+	if (!verify_post_check($mybb->input['my_post_key'], true))
 	{
 		xmlhttp_error($lang->invalid_post_code);
 	}	
@@ -1575,14 +1637,14 @@ function prostats_run_feed()
 {
 	global $mybb, $db, $templates, $theme, $lang, $unviewwhere, $parser, $lightbulb, $trow, $newthreads_cols_name, $newthreads_cols, $colspan, $feeditem;
 	
-	if(!$mybb->settings['ps_active'] || !$mybb->settings['ps_xml_feed']) {return false;}
+	if (!$mybb->settings['ps_active'] || !$mybb->settings['ps_xml_feed']) {return false;}
 
-	require_once MYBB_ROOT."inc/class_parser.php";
+	require_once MYBB_ROOT.'inc/class_parser.php';
 	$parser = new postParser;
 	
 	$seo = 0;
 	
-	if($mybb->settings['seourls'] == "yes" || ($mybb->settings['seourls'] == "auto" && $_SERVER['SEO_SUPPORT'] == 1))
+	if ($mybb->settings['seourls'] == "yes" || ($mybb->settings['seourls'] == "auto" && $_SERVER['SEO_SUPPORT'] == 1))
 	{
 		$seo = 1;
 	}
@@ -1608,7 +1670,7 @@ function prostats_run_feed()
 		[lastposter_uname_formed]
 		[lastposter_profile]
 		[forumname]
-		[forum_longname]
+		[forumname_long]
 	}
 	*/
 	
@@ -1627,22 +1689,23 @@ function prostats_run_feed()
 		$xml_feed .= '<lasttime>'.$feeditem[$key]['lasttime'].'</lasttime>';
 		$xml_feed .= '<datetime>'.htmlspecialchars_uni($feeditem[$key]['datetime']).'</datetime>';
 		$xml_feed .= '<subject>'.htmlspecialchars_uni($feeditem[$key]['subject']).'</subject>';
+		$xml_feed .= '<longsubject>'.htmlspecialchars_uni($feeditem[$key]['subject_long']).'</longsubject>';
 		$xml_feed .= '<uname>'.htmlspecialchars_uni($feeditem[$key]['username']).'</uname>';
 		$xml_feed .= '<uname2>'.htmlspecialchars_uni($feeditem[$key]['username_formed']).'</uname2>';
 		$xml_feed .= '<luid>'.$feeditem[$key]['lastposter_uid'].'</luid>';
 		$xml_feed .= '<luname>'.htmlspecialchars_uni($feeditem[$key]['lastposter_uname']).'</luname>';
 		$xml_feed .= '<luname2>'.htmlspecialchars_uni($feeditem[$key]['lastposter_uname_formed']).'</luname2>';
 		$xml_feed .= '<fname>'.htmlspecialchars_uni($feeditem[$key]['forumname']).'</fname>';
-		$xml_feed .= '<ffullname>'.htmlspecialchars_uni($feeditem[$key]['forum_longname']).'</ffullname>';
+		$xml_feed .= '<ffullname>'.htmlspecialchars_uni($feeditem[$key]['forumname_long']).'</ffullname>';
 		$xml_feed .= '</record>';
 	}
 
 	$xml_feed .= '</ProStats>';
 	
 	
-	if($mybb->settings['gzipoutput'] == 1)
+	if ($mybb->settings['gzipoutput'] == 1)
 	{
-		if(version_compare(PHP_VERSION, '4.2.0', '>='))
+		if (version_compare(PHP_VERSION, '4.2.0', '>='))
 		{
 			$xml_feed = gzip_encode($xml_feed, $mybb->settings['gziplevel']);
 		}
