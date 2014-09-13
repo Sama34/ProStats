@@ -1217,11 +1217,13 @@ function ps_GetNewestPosts($NumOfRows, $feed=false)
 	}
 	
 	$query = $db->query ("
-		SELECT t.subject,t.username,t.uid,t.tid,t.fid,t.lastpost,t.lastposter,t.lastposteruid,t.replies,t.visible,tr.uid AS truid,tr.dateline,tp.displaystyle AS styledprefix,f.name 
+		SELECT t.subject,t.username,t.uid,t.tid,t.fid,t.lastpost,t.lastposter,t.lastposteruid,t.replies,t.visible,tr.uid AS truid,tr.dateline,tp.displaystyle AS styledprefix,f.name,su.usergroup as su_usergroup,su.displaygroup as su_displaygroup,lu.usergroup as lu_usergroup,lu.displaygroup as lu_displaygroup
 		FROM ".TABLE_PREFIX."threads t 
 		LEFT JOIN ".TABLE_PREFIX."threadsread tr ON (tr.tid=t.tid AND tr.uid='".$mybb->user['uid']."') 
 		LEFT JOIN ".TABLE_PREFIX."threadprefixes tp ON (tp.pid = t.prefix) 
 		LEFT JOIN ".TABLE_PREFIX."forums f ON (f.fid = t.fid) 
+		LEFT JOIN ".TABLE_PREFIX."users su ON (su.uid = t.uid) 
+		LEFT JOIN ".TABLE_PREFIX."users lu ON (lu.uid = t.lastposteruid) 
 		WHERE (t.visible = '1' ".$vcheck.") 
 		".$unviewables['string']." 
 		AND t.closed NOT LIKE 'moved|%' 
@@ -1350,13 +1352,13 @@ function ps_GetNewestPosts($NumOfRows, $feed=false)
 		
 		if ($active_cells['Starter'])
 		{
-			$username = ps_FormatNameDb($fuid, htmlspecialchars_uni($newest_threads['username']));
+			$username = ps_FormatName(htmlspecialchars_uni($newest_threads['username']), $newest_threads['su_usergroup'], $newest_threads['su_displaygroup']);
 			$profilelink = $mybb->settings['bburl'].'/'.get_profile_link($fuid);
 		}
 		
 		if ($active_cells['Last_sender'])
 		{
-			$lastposter_uname = ps_FormatNameDb($newest_threads['lastposteruid'], htmlspecialchars_uni($newest_threads['lastposter']));
+			$lastposter_uname = ps_FormatName(htmlspecialchars_uni($newest_threads['lastposter']), $newest_threads['lu_usergroup'], $newest_threads['lu_displaygroup']);
 			$lastposter_profile = $mybb->settings['bburl'].'/'.get_profile_link($newest_threads['lastposteruid']);
 		}
 		
@@ -2028,27 +2030,6 @@ function ps_FormatName($username, $usergroup, $displaygroup)
 	{
 		$username = format_name($username, $usergroup, $displaygroup);
 	}
-	return $username;
-}
-
-
-function ps_FormatNameDb($uid, $username="")
-{
-	global $mybb, $db, $cache;
-
-	if ($mybb->settings['ps_format_name'] == "1")
-	{
-		$query = $db->query("SELECT username,usergroup,displaygroup FROM ".TABLE_PREFIX."users WHERE uid = '".$uid."'");
-		$query_array = $db->fetch_array($query);
-		$username = format_name($query_array['username'], $query_array['usergroup'], $query_array['displaygroup']);
-	}
-	else if ($username=="")
-	{
-		$query = $db->query("SELECT username FROM ".TABLE_PREFIX."users WHERE uid = '".$uid."'");
-		$query_array = $db->fetch_array($query);
-		$username = $query_array['username'];
-	}
-	
 	return $username;
 }
 
