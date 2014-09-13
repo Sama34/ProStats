@@ -47,6 +47,24 @@ $plugins->add_hook('portal_start', 'prostats_run_portal');
 $plugins->add_hook('xmlhttp', 'prostats_run_ajax');
 $plugins->add_hook('admin_config_plugins_activate_commit', 'prostats_install_redirect');
 
+global $settings;
+
+if(THIS_SCRIPT == 'index.php' && $settings['ps_index'] || THIS_SCRIPT == 'portal.php' && $settings['ps_portal'])
+{
+	global $templatelist;
+
+	if(isset($templatelist))
+	{
+		$templatelist .= ',';
+	}
+	else
+	{
+		$templatelist = '';
+	}
+
+	$templatelist .= 'prostats_newestposts_head_latest_posts, prostats_newestposts_head_date, prostats_newestposts_head_last_sender, prostats_newestposts_head_forum, prostats_newestposts_latest_posts, prostats_newestposts_date, prostats_newestposts_last_sender, prostats_newestposts_forum';
+}
+
 function prostats_info()
 {
 	global $mybb, $db;
