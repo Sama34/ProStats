@@ -1805,7 +1805,9 @@ function ps_MakeTable()
 			$_groups .= ",'{$mybb->user['additionalgroups']}'";
 		}
 		$_query1 = $db->simple_select("moderators", "*", "((id IN ({$_groups}) AND isgroup='1') OR (id='{$mybb->user['uid']}' AND isgroup='0'))");
-		
+
+		$parent_mod_forums = array();
+
 		while($results1 = $db->fetch_array($_query1))
 		{
 			$parent_mod_forums[] = " parentlist LIKE '%" . $results1['fid'] . "%' ";
@@ -1813,6 +1815,8 @@ function ps_MakeTable()
 		
 		if (count($parent_mod_forums))
 		{
+			$under_mod_forums_arr = array();
+
 			$_query2 = $db->simple_select("forums", "fid", implode($parent_mod_forums, "OR"));
 			while($results2 = $db->fetch_array($_query2))
 			{
@@ -1986,7 +1990,9 @@ function ps_GetUnviewable($name="")
 	if ($mybb->settings['ps_ignoreforums'])
 	{
 		!is_array($forum_cache) ? cache_forums() : NULL;
-		
+
+		$ignoreforums = array();
+
 		if (in_array($mybb->settings['ps_ignoreforums'], array(-1, 'all')))
 		{
 			foreach($forum_cache as $fid => $forum)
@@ -2130,7 +2136,7 @@ function ps_GetHighlight($query_arr=array())
 	global $mybb, $under_mod_forums_arr;
 	
 	if (!$mybb->settings['ps_highlight']) { return false; }	
-	if (!count($query_arr)) { return false; }
+	if (!is_array($query_arr) || !count($query_arr)) { return false; }
 	
 	$highlight_arr['style'] = array(
 		'unapproved'	=>	' ps_unapproved',//background-color:#FFDDE0;
