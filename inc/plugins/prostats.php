@@ -2,12 +2,12 @@
 /*
  _______________________________________________________
 |                                                       |
-| Name: ProStats 1.9.6                                  |
+| Name: ProStats 1.9.7                                  |
 | Type: MyBB Plugin                                     |
 | Author: SaeedGh (SaeehGhMail@Gmail.com)               |
 | Author2: AliReza Tofighi (http://my-bb.ir)            |
 | Support: http://prostats.wordpress.com/support/       |
-| Last edit: September 2nd, 2014                        |
+| Last edit: May 31, 2016                               |
 |_______________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -30,8 +30,8 @@ function prostats_g()
 {
 	global $mybb;
 
-	$mybb->psga['prostats_version'] = '1.9.6';
-	$mybb->psga['update_popup_link'] = 'https://docs.google.com/uc?export=view&id=0B1io8D4cQytcbzVQSWdHNFVJN3c';
+	$mybb->psga['prostats_version'] = '1.9.7';
+	$mybb->psga['update_popup_link'] = 'https://docs.google.com/uc?export=view&id=0B1io8D4cQytcemFVVFh3VXJzdWs';
 	$mybb->psga['surprise_link'] = 'https://docs.google.com/uc?export=view&id=0B1io8D4cQytcV0dPSTBYTTFNN00';
 }
 
@@ -1291,7 +1291,7 @@ function ps_GetNewestPosts($NumOfRows, $feed=false)
 		if ($newest_threads['styledprefix'] && $mybb->settings['ps_latest_posts_prefix'])
 		{
 			$plainprefix = strip_tags($newest_threads['styledprefix']) . ' ';
-			$styledprefix = $newest_threads['styledprefix'] . '&nbsp;';
+			$styledprefix = $newest_threads['styledprefix'];
 		}
 		
 		if ($mybb->user['uid'])
@@ -1340,8 +1340,8 @@ function ps_GetNewestPosts($NumOfRows, $feed=false)
 		if ($active_cells['Latest_posts'])
 		{
 			$parsed_subject = $parser->parse_badwords($newest_threads['subject']);
-			$subject = htmlspecialchars_uni(ps_SubjectLength($plainprefix . $parsed_subject));
-			$subject = $styledprefix . my_substr($subject, my_strlen($plainprefix));
+			$subject = ps_SubjectLength($plainprefix . $parsed_subject);
+			$subject = $styledprefix . htmlspecialchars_uni(my_substr($subject, my_strlen($plainprefix)));
 			$subject_long = $plainprefix . htmlspecialchars_uni($parsed_subject);
 			$threadlink = $mybb->settings['bburl'].'/'.get_thread_link($tid,NULL,"lastpost");
 			eval("\$readstate_icon = \"".$templates->get("prostats_readstate_icon")."\";");
@@ -2167,6 +2167,11 @@ function prostats_run_ajax()
 
 	$lang->load('prostats');
 
+	if ($mybb->input['action'] != "prostats_reload" || $mybb->request_method != "post")
+	{
+		return false;
+	}
+
 	if (!$mybb->settings['ps_enable'] || $mybb->settings['ps_hidefrombots'] && !empty($session->is_spider))
 	{
 		error($lang->prostats_disabled);
@@ -2177,8 +2182,6 @@ function prostats_run_ajax()
 		require_once MYBB_ROOT.'inc/class_parser.php';
 		$parser = new postParser;
 	}
-	
-	if ($mybb->input['action'] != "prostats_reload" || $mybb->request_method != "post"){return false;exit;}
 
 	if (!verify_post_check($mybb->input['my_post_key'], true))
 	{

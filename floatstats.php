@@ -2,12 +2,12 @@
 /*
  _______________________________________________________
 |                                                       |
-| Name: FloatStats 1.2.2                                |
+| Name: FloatStats 1.2.3                                |
 | Type: MyBB Plugin's additional script                 |
 | Author: SaeedGh (SaeehGhMail@Gmail.com)               |
-| Author 2: AliReza Tofighi (http://my-bb.ir)           |
+| Author2: AliReza Tofighi (http://my-bb.ir)            |
 | Support: http://prostats.wordpress.com/support/       |
-| Last edit: September 2nd, 2014                        |
+| Last edit: May 31, 2016                               |
 |_______________________________________________________|
 
 This program is free software: you can redistribute it and/or modify
@@ -80,6 +80,8 @@ if ($_POST && is_array($_POST) && count($_POST))
 
 require_once MYBB_ROOT."inc/functions.php";
 
+// Load DB interface
+require_once MYBB_ROOT."inc/db_base.php";
 // Connect to Database
 require_once MYBB_ROOT."inc/db_".$config['database']['type'].".php";
 
